@@ -25,6 +25,7 @@ public class ChefKnowledge {
         CUT_OR_COOK // Can be either cut (raw) or cooked depending on dish (e.g., tomato)
     }
 
+    // TODO: Make this more generic/configurable for different chefs
     public ChefKnowledge(String chefName) {
         this.chefName = chefName;
         this.cookingTimes = new HashMap<>();
