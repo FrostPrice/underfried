@@ -3,9 +3,11 @@ package underfried.agents;
 import java.util.ArrayList;
 import java.util.List;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.lang.acl.ACLMessage;
 import underfried.Restaurant;
 
 enum WaiterState {
@@ -24,7 +26,7 @@ public class Waiter extends Agent {
     protected void setup() {
         restaurant = (Restaurant) getArguments()[0];
 
-        addBehaviour(new TickerBehaviour(this, 10000) {
+        addBehaviour(new TickerBehaviour(this, 3000) {
             public void onTick() {
                 IO.println(getAID().getName() + ": I'll take a look at the tables.");
 
@@ -38,7 +40,26 @@ public class Waiter extends Agent {
                 restaurant.dirtyPlates += emptyPlatesTaken;
                 emptyPlatesTaken = 0;
 
-                // TODO Notify the chef
+                if (ordersTaken > 0) {
+                    String orders = "";
+                    String[] availableDishes = restaurant.getAvailableDishes().toArray(new String[0]);
+
+                    for (int i = 0; i < ordersTaken; i++) {
+                        int dishIndex = (int) (Math.random() * availableDishes.length);
+                        String dishOrdered = availableDishes[dishIndex];
+                        orders += dishOrdered + "\n";
+                        IO.println(getAID().getName() + ": Order of a " + dishOrdered + " to the chef.");
+                    }
+
+                    ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
+                    AID chefAID = new AID("chef", AID.ISLOCALNAME);
+                    notification.addReceiver(chefAID);
+
+                    notification.setContent(orders.trim());
+                    send(notification);
+
+                    ordersTaken = 0;
+                }
 
                 // TODO Notify the dishwasher
             }
