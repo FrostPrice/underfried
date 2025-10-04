@@ -24,6 +24,9 @@ public class Waiter extends Agent {
                 IO.println(getAID().getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
                         + " empty plates.");
 
+                restaurant.dirtyPlates += emptyPlatesTaken;
+                emptyPlatesTaken = 0;
+
                 // TODO Notify the chef
 
                 // TODO Notify the dishwasher
