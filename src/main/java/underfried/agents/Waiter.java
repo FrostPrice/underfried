@@ -32,6 +32,13 @@ public class Waiter extends Agent {
                 // TODO Notify the dishwasher
             }
         });
+
+    private void wait(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+        }
+    }
     }
 
     protected void takeOrders() {
