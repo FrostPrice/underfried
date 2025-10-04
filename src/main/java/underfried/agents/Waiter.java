@@ -1,8 +1,10 @@
 package underfried.agents;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import underfried.Restaurant;
 
@@ -42,6 +44,25 @@ public class Waiter extends Agent {
             }
         });
 
+        addBehaviour(new CyclicBehaviour(this) {
+            public void action() {
+                if (currentState == WaiterState.KITCHEN) {
+                    int mealsToTake = Math.min(2, restaurant.readyDishes.size());
+
+                    for (int i = 0; i < mealsToTake; i++) {
+                        String doneDish = restaurant.readyDishes.poll();
+                        mealsToDeliver.add(doneDish);
+                        IO.println(getAID().getName() + ": I've picked up the dish " + doneDish + " from the kitchen.");
+                    }
+
+                    deliverMeals();
+
+                    goTo(WaiterState.KITCHEN);
+                } else {
+                    block();
+                }
+            }
+        });
     }
 
     private void wait(int milliseconds) {
