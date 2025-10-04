@@ -1,5 +1,6 @@
 # Build
 target/
+bin/
 
 # JADE generated files
 APDescription.txt

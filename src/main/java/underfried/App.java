@@ -8,7 +8,7 @@ public class App {
         // Launch JADE with GUI and it's agents
         String[] jadeArgs = {
                 "-gui",
-                "-agents", "testAgent:underfried.TestAgent"
+                "-agents", "testAgent:underfried.TestAgent" // MUST ADD YOUR AGENTS HERE
         };
 
         // Start JADE platform
