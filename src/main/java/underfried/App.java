@@ -25,9 +25,12 @@ public class App {
 
             AgentController chef = ac.createNewAgent("chef", "underfried.agents.Chef", agentArgs);
             AgentController waiter = ac.createNewAgent("waiter", "underfried.agents.Waiter", agentArgs);
+            AgentController dishPreparer = ac.createNewAgent("dishPreparer", "underfried.agents.DishPreparer",
+                    agentArgs);
 
             chef.start();
             waiter.start();
+            dishPreparer.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
