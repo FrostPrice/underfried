@@ -4,25 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Restaurant {
-    private Restaurant() {
-    }
-
-    public static int cleanPlates = 10;
-
-    // Total plates in use
-    public static int takenPlates = 10;
-
-    // Total plates to be washed
-    public static int dirtyPlates = 0;
-
-    private Map<String, String[]> menu;
-    private String restaurantName;
-
     public Restaurant(String name) {
         this.restaurantName = name;
         this.menu = new HashMap<>();
         initializeMenu();
     }
+
+    public static int cleanPlates = 10;
+    // Total plates in use
+    public static int takenPlates = 10;
+    // Total plates to be washed
+    public static int dirtyPlates = 0;
+
+    private Map<String, String[]> menu;
+    private String restaurantName;
 
     /**
      * Initialize the restaurant menu with available dishes and their recipes
