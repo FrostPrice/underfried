@@ -44,7 +44,9 @@ public class Waiter extends Agent {
     protected void takeOrders() {
         for (int i = 0; i < 3; i++) {
             if (Math.random() < 0.3) {
-                IO.println("I got an order.");
+                wait(1000);
+                ordersTaken++;
+                IO.println(getAID().getName() + ": I got an order.");
             }
         }
     }
@@ -52,8 +54,9 @@ public class Waiter extends Agent {
     protected void takeEmptyPlates() {
         for (int i = 0; i < Math.min(restaurant.takenPlates, 5); i++) {
             if (Math.random() < 0.3) {
+                wait(1000);
+                IO.println(getAID().getName() + ": I took an empty plate.");
                 emptyPlatesTaken++;
-                IO.println("I took an empty plate.");
             }
         }
     }
