@@ -21,9 +21,13 @@ public class App {
 
         // Create agents with their necessary arguments
         try {
-            Object[] chefArgs = new Object[] { restaurant };
-            AgentController chef = ac.createNewAgent("chef", "underfried.agents.Chef", chefArgs);
+            Object[] agentArgs = new Object[] { restaurant };
+
+            AgentController chef = ac.createNewAgent("chef", "underfried.agents.Chef", agentArgs);
+            AgentController waiter = ac.createNewAgent("waiter", "underfried.agents.Waiter", agentArgs);
+
             chef.start();
+            waiter.start();
         } catch (Exception e) {
             e.printStackTrace();
         }

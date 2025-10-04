@@ -5,12 +5,14 @@ import jade.core.behaviours.TickerBehaviour;
 import underfried.Restaurant;
 
 public class Waiter extends Agent {
+    private Restaurant restaurant = null;
     private int ordersTaken = 0;
     private int emptyPlatesTaken = 0;
 
     protected void setup() {
-        addBehaviour(new TickerBehaviour(this, 4000) {
+        restaurant = (Restaurant) getArguments()[0];
 
+        addBehaviour(new TickerBehaviour(this, 10000) {
             public void onTick() {
                 IO.println(myAgent.getName() + ": I'll take a look at the tables.");
                 takeOrders();
@@ -37,7 +39,7 @@ public class Waiter extends Agent {
     }
 
     protected void takeEmptyPlates() {
-        for (int i = 0; i < Math.min(Restaurant.takenPlates, 5); i++) {
+        for (int i = 0; i < Math.min(restaurant.takenPlates, 5); i++) {
             if (Math.random() < 0.3) {
                 emptyPlatesTaken++;
                 IO.println("I took an empty plate.");

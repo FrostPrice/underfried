@@ -10,11 +10,9 @@ public class Restaurant {
         initializeMenu();
     }
 
-    public static int cleanPlates = 10;
-    // Total plates in use
-    public static int takenPlates = 10;
-    // Total plates to be washed
-    public static int dirtyPlates = 0;
+    public int cleanPlates = 10;
+    public int takenPlates = 10;
+    public int dirtyPlates = 0;
 
     private Map<String, String[]> menu;
     private String restaurantName;
