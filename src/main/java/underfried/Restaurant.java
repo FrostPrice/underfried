@@ -1,7 +1,9 @@
 package underfried;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 public class Restaurant {
     public Restaurant(String name) {
@@ -13,6 +15,14 @@ public class Restaurant {
     public int cleanPlates = 10;
     public int takenPlates = 10;
     public int dirtyPlates = 0;
+
+    public Queue<String> readyDishes = new LinkedList<>() {
+        {
+            add("steak");
+            add("pasta");
+            add("salad");
+        }
+    };
 
     private Map<String, String[]> menu;
     private String restaurantName;
