@@ -14,13 +14,14 @@ public class Waiter extends Agent {
 
         addBehaviour(new TickerBehaviour(this, 10000) {
             public void onTick() {
-                IO.println(myAgent.getName() + ": I'll take a look at the tables.");
+                IO.println(getAID().getName() + ": I'll take a look at the tables.");
+
                 takeOrders();
                 takeEmptyPlates();
                 Restaurant.dirtyPlates += emptyPlatesTaken;
                 emptyPlatesTaken = 0;
 
-                IO.println(myAgent.getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
+                IO.println(getAID().getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
                         + " empty plates.");
 
                 // TODO Notify the chef
