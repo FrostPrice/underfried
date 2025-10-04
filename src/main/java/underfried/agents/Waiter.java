@@ -1,4 +1,6 @@
 package underfried.agents;
+import java.util.ArrayList;
+import java.util.List;
 
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
@@ -15,6 +17,8 @@ public class Waiter extends Agent {
     private int ordersTaken = 0;
     private int emptyPlatesTaken = 0;
 
+    private List<String> mealsToDeliver = new ArrayList<>();
+
     protected void setup() {
         restaurant = (Restaurant) getArguments()[0];
 
@@ -24,8 +28,6 @@ public class Waiter extends Agent {
 
                 takeOrders();
                 takeEmptyPlates();
-                Restaurant.dirtyPlates += emptyPlatesTaken;
-                emptyPlatesTaken = 0;
 
                 goTo(WaiterState.KITCHEN);
                 IO.println(getAID().getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
@@ -78,5 +80,16 @@ public class Waiter extends Agent {
                 emptyPlatesTaken++;
             }
         }
+    }
+
+    protected void deliverMeals() {
+        if (currentState == WaiterState.KITCHEN)
+            goTo(WaiterState.DINING_AREA);
+
+        for (String meal : mealsToDeliver) {
+            wait(1000);
+            IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
+        }
+        mealsToDeliver.clear();
     }
 }
