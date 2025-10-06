@@ -111,7 +111,7 @@ public class DishWasher extends Agent {
         System.out.println("DishWasher: Starting to wash " + platesToWash + " dirty plates");
         System.out.println("DishWasher: Dirty plates available: " + restaurant.dirtyPlates);
 
-        // Remove dirty plates from the count
+        // Remove dirty plates from the global count
         restaurant.dirtyPlates -= platesToWash;
 
         int totalWashTime = platesToWash * washingTimePerPlate;

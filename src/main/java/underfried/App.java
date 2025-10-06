@@ -32,6 +32,8 @@ public class App {
             // TODO: Current problems:
             // - The Chef may fail to process the orders. And does not have any mechanism
             // about these failures.
+            // - There is no mechanism to map the orders to the corresponding dishes being
+            // prepared.
 
             chef.start();
             waiter.start();
