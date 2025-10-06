@@ -1,0 +1,169 @@
+package underfried.agents;
+
+import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.core.AID;
+import underfried.Restaurant;
+
+public class DishWasher extends Agent {
+    private Restaurant restaurant;
+    private int washingCapacity = 5; // Maximum plates that can be washed at once
+    private int washingTimePerPlate = 2000; // 2 seconds per plate in milliseconds
+
+    @Override
+    protected void setup() {
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            restaurant = (Restaurant) args[0];
+        } else {
+            throw new IllegalArgumentException("DishWasher agent missing required arguments: Restaurant instance");
+        }
+
+        System.out.println("DishWasher Agent " + getAID().getName() + " is ready to wash dishes!");
+        System.out.println("DishWasher: Washing capacity: " + washingCapacity + " plates at once");
+        System.out.println("DishWasher: Washing time: " + (washingTimePerPlate / 1000) + " seconds per plate");
+        System.out.println("DishWasher: Current dirty plates in restaurant: " + restaurant.dirtyPlates);
+
+        addBehaviour(new DishWashingBehaviour());
+    }
+
+    @Override
+    protected void takeDown() {
+        System.out.println("DishWasher Agent " + getAID().getName() + " is finishing work.");
+        System.out.println("DishWasher: Final stats - Dirty plates remaining: " + restaurant.dirtyPlates +
+                ", Clean plates available: " + restaurant.cleanPlates);
+    }
+
+    private class DishWashingBehaviour extends CyclicBehaviour {
+        @Override
+        public void action() {
+            // Check for incoming messages first
+            ACLMessage msg = receive();
+            if (msg != null) {
+                String content = msg.getContent();
+                System.out.println("DishWasher received message: " + content);
+
+                if (content != null && !content.trim().isEmpty()) {
+                    processMessage(content, msg.getSender());
+                } else {
+                    System.out.println("DishWasher received empty message from " + msg.getSender().getName());
+                }
+            }
+
+            // Check if there are dirty plates to wash
+            if (restaurant.dirtyPlates > 0) {
+                washDirtyPlates();
+            } else {
+                if (msg == null) {
+                    block();
+                }
+            }
+        }
+    }
+
+    private void processMessage(String content, AID sender) {
+        try {
+            if (content.startsWith("DIRTY_PLATES:")) {
+                handleDirtyPlatesNotification(content, sender);
+            } else {
+                System.out.println("DishWasher: Unknown message format: " + content);
+            }
+        } catch (Exception e) {
+            System.out.println("DishWasher: ERROR - Exception processing message: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void handleDirtyPlatesNotification(String content, AID sender) {
+        // Parse message format: "DIRTY_PLATES:COUNT"
+        // e.g. "DIRTY_PLATES:3"
+        String[] parts = content.split(":");
+        if (parts.length != 2) {
+            System.out.println("DishWasher: ERROR - Invalid dirty plates format: " + content);
+            return;
+        }
+
+        try {
+            int plateCount = Integer.parseInt(parts[1]);
+            System.out.println("DishWasher: Received notification of " + plateCount + " dirty plates from " +
+                    sender.getName());
+            System.out.println("DishWasher: Total dirty plates now available: " + restaurant.dirtyPlates);
+
+            // The dirty plates are already added to restaurant.dirtyPlates by the waiter
+            // We just acknowledge the notification
+            if (plateCount > 0) {
+                System.out.println("DishWasher: Will start washing dishes now!");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("DishWasher: ERROR - Invalid plate count: " + parts[1]);
+        }
+    }
+
+    private void washDirtyPlates() {
+        if (restaurant.dirtyPlates <= 0) {
+            return;
+        }
+
+        // Determine how many plates to wash in this batch
+        int platesToWash = Math.min(restaurant.dirtyPlates, washingCapacity);
+
+        System.out.println("DishWasher: Starting to wash " + platesToWash + " dirty plates");
+        System.out.println("DishWasher: Dirty plates available: " + restaurant.dirtyPlates);
+
+        // Remove dirty plates from the count
+        restaurant.dirtyPlates -= platesToWash;
+
+        int totalWashTime = platesToWash * washingTimePerPlate;
+
+        System.out.println("DishWasher: Washing " + platesToWash + " plates will take " +
+                (totalWashTime / 1000) + " seconds");
+
+        // Simulate washing time
+        try {
+            Thread.sleep(totalWashTime);
+        } catch (InterruptedException e) {
+            System.out.println("DishWasher: ERROR - Washing interrupted");
+            Thread.currentThread().interrupt();
+            // Return dirty plates to the count if washing was interrupted
+            restaurant.dirtyPlates += platesToWash;
+            return;
+        }
+
+        // Washing completed successfully
+        System.out.println("DishWasher: SUCCESS - Finished washing " + platesToWash + " plates");
+        System.out.println("DishWasher: Remaining dirty plates: " + restaurant.dirtyPlates);
+
+        // Send clean plates to DishPreparer
+        sendCleanPlatesToDishPreparer(platesToWash);
+    }
+
+    private void sendCleanPlatesToDishPreparer(int cleanPlateCount) {
+        // Create message to notify dish preparer about clean plates
+        ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
+
+        // Set recipient (Dish Preparer agent)
+        AID dishPreparerAID = new AID("dishPreparer", AID.ISLOCALNAME);
+        notification.addReceiver(dishPreparerAID);
+
+        // Set message content with clean plates count
+        // Format: "CLEAN_PLATES:COUNT"
+        // e.g. "CLEAN_PLATES:5"
+        notification.setContent("CLEAN_PLATES:" + cleanPlateCount);
+
+        // Send notification
+        send(notification);
+
+        System.out.println("DishWasher: Sent " + cleanPlateCount + " clean plates to DishPreparer");
+        System.out.println("DishWasher: DishPreparer will update the restaurant's clean plate count");
+    }
+
+    public void printStatus() {
+        System.out.println("=== DishWasher Status ===");
+        System.out.println("Washing capacity: " + washingCapacity + " plates per batch");
+        System.out.println("Washing time per plate: " + (washingTimePerPlate / 1000) + " seconds");
+        System.out.println("Current dirty plates: " + restaurant.dirtyPlates);
+        System.out.println("Current clean plates: " + restaurant.cleanPlates);
+        System.out.println("========================");
+    }
+}
