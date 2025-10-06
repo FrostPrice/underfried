@@ -27,10 +27,16 @@ public class App {
             AgentController waiter = ac.createNewAgent("waiter", "underfried.agents.Waiter", agentArgs);
             AgentController dishPreparer = ac.createNewAgent("dishPreparer", "underfried.agents.DishPreparer",
                     agentArgs);
+            AgentController dishWasher = ac.createNewAgent("dishWasher", "underfried.agents.DishWasher", agentArgs);
+
+            // TODO: Current problems:
+            // - The Chef may fail to process the orders. And does not have any mechanism
+            // about these failures.
 
             chef.start();
             waiter.start();
             dishPreparer.start();
+            dishWasher.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
