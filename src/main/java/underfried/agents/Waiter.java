@@ -38,7 +38,6 @@ public class Waiter extends Agent {
                         + " empty plates.");
 
                 restaurant.dirtyPlates += emptyPlatesTaken;
-                emptyPlatesTaken = 0;
 
                 if (ordersTaken > 0) {
                     String orders = "";
@@ -61,7 +60,18 @@ public class Waiter extends Agent {
                     ordersTaken = 0;
                 }
 
-                // TODO Notify the dishwasher
+                // Notify the dishwasher about dirty plates
+                if (emptyPlatesTaken > 0) {
+                    ACLMessage dirtyPlatesNotification = new ACLMessage(ACLMessage.INFORM);
+                    AID dishWasherAID = new AID("dishWasher", AID.ISLOCALNAME);
+                    dirtyPlatesNotification.addReceiver(dishWasherAID);
+                    dirtyPlatesNotification.setContent("DIRTY_PLATES:" + emptyPlatesTaken);
+                    send(dirtyPlatesNotification);
+
+                    IO.println(
+                            getAID().getName() + ": Notified dishwasher about " + emptyPlatesTaken + " dirty plates.");
+                    emptyPlatesTaken = 0;
+                }
             }
         });
 
