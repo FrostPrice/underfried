@@ -11,7 +11,8 @@ import jade.lang.acl.ACLMessage;
 import underfried.Restaurant;
 
 enum WaiterState {
-    KITCHEN, DINING_AREA
+    KITCHEN,
+    DINING_AREA
 }
 
 public class Waiter extends Agent {
