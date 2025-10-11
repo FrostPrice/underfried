@@ -106,7 +106,7 @@ public class Waiter extends Agent {
         }
 
         protected void execute() {
-            IO.println(getAID().getName() + ": I'll take a look at the tables.");
+            IO.println("[Waiter]: I'll take a look at the tables.");
 
             isBusy = true;
 
@@ -117,7 +117,7 @@ public class Waiter extends Agent {
             takeEmptyPlates();
 
             goTo(WaiterState.KITCHEN);
-            IO.println(getAID().getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
+            IO.println("[Waiter]: I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
                     + " empty plates.");
 
             restaurant.dirtyPlates += emptyPlatesTaken;
@@ -133,10 +133,10 @@ public class Waiter extends Agent {
                     // Add order to shared state for validation/control
                     if (restaurant.addOrder(dishOrdered)) {
                         ordersMessage += dishOrdered + "\n";
-                        IO.println(getAID().getName() + ": Added order for " + dishOrdered + " to tracking queue.");
+                        IO.println("[Waiter]: Added order for " + dishOrdered + " to tracking queue.");
                         logToUI("New order: " + dishOrdered);
                     } else {
-                        IO.println(getAID().getName() + ": ERROR - Unknown dish: " + dishOrdered);
+                        IO.println("[Waiter]: ERROR - Unknown dish: " + dishOrdered);
                     }
                 }
 
@@ -152,8 +152,8 @@ public class Waiter extends Agent {
                         gameWindow.getGameState().updateAgentStatus("waiter", "Sent " + ordersTaken + " orders");
                     }
 
-                    IO.println(getAID().getName() + ": Sent " + ordersTaken + " order(s) to Chef via message.");
-                    IO.println(getAID().getName() + ": [VALIDATION] Total orders in tracking queue: " +
+                    IO.println("[Waiter]: Sent " + ordersTaken + " order(s) to Chef via message.");
+                    IO.println("[Waiter]: [VALIDATION] Total orders in tracking queue: " +
                             restaurant.getPendingOrderCount());
                 }
 
@@ -169,7 +169,7 @@ public class Waiter extends Agent {
                 send(dirtyPlatesNotification);
 
                 IO.println(
-                        getAID().getName() + ": Notified dishwasher about " + emptyPlatesTaken + " dirty plates.");
+                        "[Waiter]: Notified dishwasher about " + emptyPlatesTaken + " dirty plates.");
                 emptyPlatesTaken = 0;
             }
 
@@ -191,23 +191,21 @@ public class Waiter extends Agent {
 
             // Validate shared state before picking up dishes
             int availableDishes = restaurant.readyDishes.size();
-            IO.println(
-                    getAID().getName() + ": [VALIDATION] Checking kitchen - Ready dishes: " + availableDishes);
+            IO.println("[Waiter]: [VALIDATION] Checking kitchen - Ready dishes: " + availableDishes);
 
             int mealsToTake = Math.min(2, availableDishes);
 
             if (mealsToTake > 0) {
-                IO.println(getAID().getName() + ": [VALIDATION] ✓ Picking up " + mealsToTake + " dish(es)");
+                IO.println("[Waiter]: [VALIDATION] ✓ Picking up " + mealsToTake + " dish(es)");
                 List<String> mealsToDeliver = new ArrayList<>();
 
                 for (int i = 0; i < mealsToTake; i++) {
                     String doneDish = restaurant.readyDishes.poll();
                     mealsToDeliver.add(doneDish);
-                    IO.println(getAID().getName() + ": I've picked up the dish " + doneDish + " from the kitchen.");
+                    IO.println("[Waiter]: I've picked up the dish " + doneDish + " from the kitchen.");
                 }
 
-                IO.println(getAID().getName() + ": [VALIDATION] Remaining ready dishes: " +
-                        restaurant.readyDishes.size());
+                IO.println("[Waiter]: [VALIDATION] Remaining ready dishes: " + restaurant.readyDishes.size());
 
                 deliverMeals(mealsToDeliver);
             }
@@ -250,7 +248,7 @@ public class Waiter extends Agent {
             if (Math.random() < 0.3) {
                 gameWindow.wait(1000);
                 ordersTaken++;
-                IO.println(getAID().getName() + ": I got an order.");
+                IO.println("[Waiter]: I got an order.");
             }
         }
     }
@@ -265,7 +263,7 @@ public class Waiter extends Agent {
         while (attemptsMade < maxAttempts && restaurant.takenPlates > 0) {
             if (Math.random() < 0.3) {
                 gameWindow.wait(1000);
-                IO.println(getAID().getName() + ": I took an empty plate.");
+                IO.println("[Waiter]: I took an empty plate.");
                 emptyPlatesTaken++;
                 restaurant.takenPlates--; // Decrement taken plates immediately
             }
@@ -282,7 +280,7 @@ public class Waiter extends Agent {
 
         for (String meal : mealsToDeliver) {
             gameWindow.wait(1000);
-            IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
+            IO.println("[Waiter]: Delivering the dish " + meal + " to a table.");
             logToUI("Delivered " + meal + " to table");
             // When a meal is delivered, the customer now has a plate
             restaurant.takenPlates++;
