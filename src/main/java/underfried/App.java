@@ -18,8 +18,8 @@ public class App {
         Restaurant restaurant = new Restaurant("Underfried Restaurant");
 
         // Initialize the game UI on the Swing Event Dispatch Thread
+        gameWindow = new GameWindow(restaurant);
         SwingUtilities.invokeLater(() -> {
-            gameWindow = new GameWindow(restaurant);
             // Set the IO class to use this game window for logging
             IO.setGameWindow(gameWindow);
             gameWindow.appendLog("Restaurant opened!");
