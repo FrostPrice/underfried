@@ -257,6 +257,12 @@ public class Chef extends Agent {
         for (String ingredient : ingredients) {
             ingredient = ingredient.trim().toLowerCase();
             processIngredient(ingredient, mealName);
+
+            // Check for fires after finishing each ingredient
+            if (checkAndHandleFires()) {
+                IO.println("Chef", "Returning to finish meal: " + mealName + " after handling fire");
+                logToUI("Returning to complete: " + mealName);
+            }
         }
 
         IO.println("Chef", "Finished processing all ingredients for meal: " + mealName);
@@ -353,6 +359,10 @@ public class Chef extends Agent {
         }
 
         IO.println("Chef", "SUCCESS - Finished cooking " + ingredient + " using " + method);
+
+        // Check for fires immediately after finishing cooking
+        checkAndHandleFires();
+
         return true;
     }
 
@@ -384,6 +394,10 @@ public class Chef extends Agent {
         }
 
         IO.println("Chef", "SUCCESS - Finished cutting " + ingredient);
+
+        // Check for fires immediately after finishing cutting
+        checkAndHandleFires();
+
         return true;
     }
 
