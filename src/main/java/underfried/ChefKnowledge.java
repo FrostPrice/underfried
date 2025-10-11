@@ -45,6 +45,10 @@ public class ChefKnowledge {
         cookingTimes.put("fish", 4);
         cookingTimes.put("pasta", 5);
         cookingTimes.put("rice", 7);
+        cookingTimes.put("potato", 6);
+        cookingTimes.put("carrot", 5);
+        cookingTimes.put("onion", 4);
+        cookingTimes.put("tomato", 3);
 
         // Cutting times (in seconds) - represents chef's knife skills
         cuttingTimes.put("meat", 5);
@@ -62,6 +66,10 @@ public class ChefKnowledge {
         cookingMethods.put("fish", "steaming");
         cookingMethods.put("pasta", "boiling");
         cookingMethods.put("rice", "steaming");
+        cookingMethods.put("potato", "boiling");
+        cookingMethods.put("carrot", "steaming");
+        cookingMethods.put("onion", "sautéing");
+        cookingMethods.put("tomato", "roasting");
 
         // Processing requirements - what each ingredient actually needs
         processingRequirements.put("meat", IngredientProcessing.CUT_AND_COOK); // Meat must be cut and cooked
