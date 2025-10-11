@@ -15,7 +15,10 @@ public class GameObject {
         CLEAN_PLATE(new Color(255, 255, 255), "🍽️"),
         DIRTY_PLATE(new Color(150, 120, 100), "🍽️"),
         FOOD_READY(new Color(255, 200, 100), "🍔"),
-        INGREDIENT(new Color(100, 200, 100), "🥕");
+        INGREDIENT(new Color(100, 200, 100), "🥕"),
+        FIRE(new Color(255, 100, 0), "🔥"),
+        BURNED_FOOD(new Color(50, 40, 30), "🔥"),
+        RAT(new Color(128, 128, 128), "🐀");
 
         private final Color color;
         private final String icon;

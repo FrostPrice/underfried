@@ -117,8 +117,54 @@ public class GamePanel extends JPanel implements ActionListener {
 
     private void drawObjects(Graphics2D g2d) {
         for (GameObject obj : gameState.getObjects()) {
+            // Add special effects for environmental conditions
+            if (obj.getType() == GameObject.ObjectType.FIRE) {
+                drawFireEffect(g2d, obj);
+            } else if (obj.getType() == GameObject.ObjectType.RAT) {
+                drawRatEffect(g2d, obj);
+            } else if (obj.getType() == GameObject.ObjectType.BURNED_FOOD) {
+                drawBurnedFoodEffect(g2d, obj);
+            }
+
             obj.draw(g2d, TILE_SIZE);
         }
+    }
+
+    private void drawFireEffect(Graphics2D g2d, GameObject fire) {
+        int pixelX = (int) (fire.getX() * TILE_SIZE);
+        int pixelY = (int) (fire.getY() * TILE_SIZE);
+
+        // Pulsing red/orange glow effect
+        long time = System.currentTimeMillis();
+        int pulse = (int) (Math.sin(time / 200.0) * 30 + 30);
+
+        g2d.setColor(new Color(255, 100, 0, pulse));
+        g2d.fillOval(pixelX - 10, pixelY - 10, TILE_SIZE + 20, TILE_SIZE + 20);
+
+        g2d.setColor(new Color(255, 200, 0, pulse / 2));
+        g2d.fillOval(pixelX - 5, pixelY - 5, TILE_SIZE + 10, TILE_SIZE + 10);
+    }
+
+    private void drawRatEffect(Graphics2D g2d, GameObject rat) {
+        int pixelX = (int) (rat.getX() * TILE_SIZE);
+        int pixelY = (int) (rat.getY() * TILE_SIZE);
+
+        // Draw warning circle
+        g2d.setColor(new Color(255, 255, 0, 100));
+        g2d.setStroke(new BasicStroke(2));
+        g2d.drawOval(pixelX - 5, pixelY - 5, TILE_SIZE / 2 + 10, TILE_SIZE / 2 + 10);
+    }
+
+    private void drawBurnedFoodEffect(Graphics2D g2d, GameObject burned) {
+        int pixelX = (int) (burned.getX() * TILE_SIZE);
+        int pixelY = (int) (burned.getY() * TILE_SIZE);
+
+        // Draw smoke effect (small grey puffs)
+        g2d.setColor(new Color(100, 100, 100, 80));
+        long time = System.currentTimeMillis();
+        int offset = (int) (Math.sin(time / 300.0) * 5);
+        g2d.fillOval(pixelX + 5, pixelY - 10 + offset, 8, 8);
+        g2d.fillOval(pixelX + 10, pixelY - 15 + offset, 6, 6);
     }
 
     private void drawAgents(Graphics2D g2d) {
@@ -135,7 +181,7 @@ public class GamePanel extends JPanel implements ActionListener {
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Arial", Font.BOLD, 12));
 
-        // Display plate counts
+        // Display plate counts and environmental conditions
         String status = String.format("Clean Plates: %d | Dirty Plates: %d | Pending Orders: %d | Ready Dishes: %d",
                 gameState.getRestaurant().cleanPlates,
                 gameState.getRestaurant().dirtyPlates,
@@ -143,6 +189,25 @@ public class GamePanel extends JPanel implements ActionListener {
                 gameState.getRestaurant().getReadyDishCount());
 
         g2d.drawString(status, 10, 20);
+
+        // Display environmental conditions warnings if any
+        int fires = gameState.getRestaurant().getConditionCount(underfried.Restaurant.EnvironmentalCondition.FIRE);
+        int rats = gameState.getRestaurant().getConditionCount(underfried.Restaurant.EnvironmentalCondition.RAT);
+        int burned = gameState.getRestaurant()
+                .getConditionCount(underfried.Restaurant.EnvironmentalCondition.BURNED_FOOD);
+
+        if (fires > 0 || rats > 0 || burned > 0) {
+            g2d.setColor(Color.RED);
+            g2d.setFont(new Font("Arial", Font.BOLD, 11));
+            String warnings = "ALERTS: ";
+            if (fires > 0)
+                warnings += "Fire x" + fires + " ";
+            if (rats > 0)
+                warnings += "Rat x" + rats + " ";
+            if (burned > 0)
+                warnings += "Burned x" + burned + " ";
+            g2d.drawString(warnings, 10, GRID_HEIGHT * TILE_SIZE - 10);
+        }
 
         // Draw station labels
         g2d.setFont(new Font("Arial", Font.PLAIN, 10));
