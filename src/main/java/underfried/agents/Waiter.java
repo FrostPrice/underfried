@@ -105,13 +105,14 @@ public class Waiter extends Agent {
     }
 
     protected void goTo(WaiterState destination) {
+        if (currentState == destination)
+            return;
         wait(3000);
         currentState = destination;
     }
 
     protected void takeOrders() {
-        if (currentState == WaiterState.KITCHEN)
-            goTo(WaiterState.DINING_AREA);
+        goTo(WaiterState.DINING_AREA);
 
         for (int i = 0; i < 3; i++) {
             if (Math.random() < 0.3) {
@@ -123,8 +124,7 @@ public class Waiter extends Agent {
     }
 
     protected void takeEmptyPlates() {
-        if (currentState == WaiterState.KITCHEN)
-            goTo(WaiterState.DINING_AREA);
+        goTo(WaiterState.DINING_AREA);
 
         for (int i = 0; i < Math.min(restaurant.takenPlates, 5); i++) {
             if (Math.random() < 0.3) {
@@ -135,9 +135,7 @@ public class Waiter extends Agent {
         }
     }
 
-    protected void deliverMeals() {
-        if (currentState == WaiterState.KITCHEN)
-            goTo(WaiterState.DINING_AREA);
+        goTo(WaiterState.DINING_AREA);
 
         for (String meal : mealsToDeliver) {
             wait(1000);
