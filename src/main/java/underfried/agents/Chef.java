@@ -9,10 +9,18 @@ import underfried.ChefKnowledge;
 import underfried.ui.GameWindow;
 import underfried.IO;
 
+enum ChefState {
+    COUNTER,
+    DISH_PREPARER,
+    CUTTING,
+    COOKING,
+}
+
 public class Chef extends Agent {
     private Restaurant restaurant;
     private ChefKnowledge chefKnowledge;
     private GameWindow gameWindow;
+    private ChefState currentState = ChefState.COOKING;
 
     @Override
     protected void setup() {
@@ -53,12 +61,58 @@ public class Chef extends Agent {
         IO.println("Chef", "Agent " + getAID().getName() + " is finishing work.");
     }
 
+    protected void goTo(ChefState destination) {
+        if (currentState == destination)
+            return;
+
+        double targetX = 0, targetY = 0;
+
+        // Update UI with movement BEFORE changing state
+        if (gameWindow != null) {
+            switch (destination) {
+                case COUNTER:
+                    targetX = 9.5;
+                    targetY = 7.0;
+                    gameWindow.getGameState().moveAgent("chef", targetX, targetY);
+                    gameWindow.getGameState().updateAgentStatus("chef", "Going to counter");
+                    break;
+                case DISH_PREPARER:
+                    targetX = 7.5;
+                    targetY = 2.5;
+                    gameWindow.getGameState().moveAgent("chef", targetX, targetY);
+                    gameWindow.getGameState().updateAgentStatus("chef", "Going to dish preparer");
+                    break;
+                case COOKING:
+                    targetX = 2.0;
+                    targetY = 2.0;
+                    gameWindow.getGameState().moveAgent("chef", targetX, targetY);
+                    gameWindow.getGameState().updateAgentStatus("chef", "Going to cooking station");
+                    break;
+                case CUTTING:
+                    targetX = 5.0;
+                    targetY = 2.0;
+                    gameWindow.getGameState().moveAgent("chef", targetX, targetY);
+                    gameWindow.getGameState().updateAgentStatus("chef", "Going to cutting station");
+                    break;
+            }
+
+            // Wait until agent has arrived at destination
+            gameWindow.waitUntilArrived("chef", targetX, targetY);
+        }
+
+        // Update state AFTER arriving at destination
+        currentState = destination;
+    }
+
     private class OrderHandlingBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
             // Receive orders via ACL messages
             ACLMessage msg = receive();
             if (msg != null) {
+                // Move to counter to receive the order
+                goTo(ChefState.COUNTER);
+
                 IO.println("Chef", "Received order: " + msg.getContent());
 
                 // Parse the order content
@@ -184,11 +238,18 @@ public class Chef extends Agent {
             return false;
         }
 
+        // Move to cooking station
+        goTo(ChefState.COOKING);
+
         Integer cookTime = chefKnowledge.getCookingTime(ingredient);
         String method = chefKnowledge.getCookingMethod(ingredient);
 
         IO.println("Chef", "Starting to cook " + ingredient + " using " + method +
                 " (will take " + cookTime + " seconds)");
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("chef", "Cooking " + ingredient);
+        }
 
         // Simulate cooking time
         try {
@@ -210,9 +271,16 @@ public class Chef extends Agent {
             return false;
         }
 
+        // Move to cutting station
+        goTo(ChefState.CUTTING);
+
         Integer cutTime = chefKnowledge.getCuttingTime(ingredient);
 
         IO.println("Chef", "Starting to cut " + ingredient + " (will take " + cutTime + " seconds)");
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("chef", "Cutting " + ingredient);
+        }
 
         // Simulate cutting time
         try {
@@ -228,6 +296,9 @@ public class Chef extends Agent {
     }
 
     private void notifyDishPreparer(String status, String ingredient, String mealName) {
+        // Move to dish preparer to deliver the ingredient
+        goTo(ChefState.DISH_PREPARER);
+
         // Create message to notify dish preparer
         ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
 

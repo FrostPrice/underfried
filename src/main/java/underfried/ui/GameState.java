@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * Manages the game state and synchronizes with JADE agents
@@ -19,7 +18,6 @@ public class GameState {
     private List<Station> stations;
     private List<GameObject> objects;
     private Map<String, AgentSprite> agentMap;
-    private Random random;
 
     // Predefined positions for agents and stations
     private static final double CHEF_START_X = 2.5;
@@ -39,7 +37,6 @@ public class GameState {
         this.stations = new ArrayList<>();
         this.objects = new ArrayList<>();
         this.agentMap = new HashMap<>();
-        this.random = new Random();
 
         initializeStations();
         initializeAgents();
@@ -105,26 +102,6 @@ public class GameState {
     }
 
     private void updateAgentBehaviors() {
-        // Chef behavior - move between cooking and cutting stations when there are
-        // orders
-        AgentSprite chef = agentMap.get("chef");
-        if (restaurant.getPendingOrderCount() > 0) {
-            if (chef != null && !chef.isMoving()) {
-                // Randomly move between cooking and cutting stations
-                if (random.nextBoolean()) {
-                    chef.setTargetPosition(2, 2);
-                    chef.setStatus("Cooking");
-                } else {
-                    chef.setTargetPosition(5, 2);
-                    chef.setStatus("Cutting");
-                }
-            }
-        } else {
-            if (chef != null) {
-                chef.setStatus("Waiting");
-            }
-        }
-
         // DishPreparer behavior - stay at prep station when preparing
         AgentSprite dishPreparer = agentMap.get("dishPreparer");
         if (dishPreparer != null) {
