@@ -135,7 +135,7 @@ public class Chef extends Agent {
     }
 
     private void processIngredient(String ingredient, String mealName) {
-        System.out.println("Chef: Processing ingredient " + ingredient + " for meal " + mealName);
+        IO.println("Chef", "Processing ingredient " + ingredient + " for meal " + mealName);
 
         // Check what processing this ingredient actually needs
         boolean needsCutting = chefKnowledge.needsCutting(ingredient);
@@ -149,24 +149,24 @@ public class Chef extends Agent {
         if (needsCutting) {
             cutSuccess = cutIngredient(ingredient);
             if (!cutSuccess) {
-                System.out.println("Chef: Failed to cut " + ingredient + " for meal " + mealName);
+                IO.println("Chef", "Failed to cut " + ingredient + " for meal " + mealName);
                 return; // Don't proceed to cooking if cutting failed
             }
         } else {
-            System.out.println("Chef: " + ingredient + " doesn't need cutting for this dish");
+            IO.println("Chef", ingredient + " doesn't need cutting for this dish");
         }
 
         // Cook the ingredient if needed and if cutting was successful (or not required)
         if (cutSuccess && needsCooking && shouldCook) {
             cookSuccess = cookIngredient(ingredient);
             if (!cookSuccess) {
-                System.out.println("Chef: Failed to cook " + ingredient + " for meal " + mealName);
+                IO.println("Chef", "Failed to cook " + ingredient + " for meal " + mealName);
                 return; // Don't notify if cooking failed
             }
         } else if (needsCooking && !shouldCook) {
-            System.out.println("Chef: Using " + ingredient + " raw for " + mealName);
+            IO.println("Chef", "Using " + ingredient + " raw for " + mealName);
         } else if (!needsCooking) {
-            System.out.println("Chef: " + ingredient + " doesn't need cooking for this dish");
+            IO.println("Chef", ingredient + " doesn't need cooking for this dish");
         }
 
         // Notify dish preparer about this specific ingredient
@@ -179,51 +179,51 @@ public class Chef extends Agent {
 
     private boolean cookIngredient(String ingredient) {
         if (!chefKnowledge.canCook(ingredient)) {
-            System.out.println("Chef: ERROR - Don't know how to cook " + ingredient);
-            System.out.println("Chef: Available ingredients for cooking: " + chefKnowledge.getCookableIngredients());
+            IO.println("Chef", "ERROR - Don't know how to cook " + ingredient);
+            IO.println("Chef", "Available ingredients for cooking: " + chefKnowledge.getCookableIngredients());
             return false;
         }
 
         Integer cookTime = chefKnowledge.getCookingTime(ingredient);
         String method = chefKnowledge.getCookingMethod(ingredient);
 
-        System.out.println("Chef: Starting to cook " + ingredient + " using " + method +
+        IO.println("Chef", "Starting to cook " + ingredient + " using " + method +
                 " (will take " + cookTime + " seconds)");
 
         // Simulate cooking time
         try {
             Thread.sleep(cookTime * 1000); // Convert to milliseconds
         } catch (InterruptedException e) {
-            System.out.println("Chef: ERROR - Cooking interrupted for " + ingredient);
+            IO.println("Chef", "ERROR - Cooking interrupted for " + ingredient);
             Thread.currentThread().interrupt(); // Restore interrupted status
             return false;
         }
 
-        System.out.println("Chef: SUCCESS - Finished cooking " + ingredient + " using " + method);
+        IO.println("Chef", "SUCCESS - Finished cooking " + ingredient + " using " + method);
         return true;
     }
 
     private boolean cutIngredient(String ingredient) {
         if (!chefKnowledge.canCut(ingredient)) {
-            System.out.println("Chef: ERROR - Don't know how to cut " + ingredient);
-            System.out.println("Chef: Available ingredients for cutting: " + chefKnowledge.getCuttableIngredients());
+            IO.println("Chef", "ERROR - Don't know how to cut " + ingredient);
+            IO.println("Chef", "Available ingredients for cutting: " + chefKnowledge.getCuttableIngredients());
             return false;
         }
 
         Integer cutTime = chefKnowledge.getCuttingTime(ingredient);
 
-        System.out.println("Chef: Starting to cut " + ingredient + " (will take " + cutTime + " seconds)");
+        IO.println("Chef", "Starting to cut " + ingredient + " (will take " + cutTime + " seconds)");
 
         // Simulate cutting time
         try {
             Thread.sleep(cutTime * 1000); // Convert to milliseconds
         } catch (InterruptedException e) {
-            System.out.println("Chef: ERROR - Cutting interrupted for " + ingredient);
+            IO.println("Chef", "ERROR - Cutting interrupted for " + ingredient);
             Thread.currentThread().interrupt(); // Restore interrupted status
             return false;
         }
 
-        System.out.println("Chef: SUCCESS - Finished cutting " + ingredient);
+        IO.println("Chef", "SUCCESS - Finished cutting " + ingredient);
         return true;
     }
 
@@ -243,7 +243,7 @@ public class Chef extends Agent {
         // Send notification
         send(notification);
 
-        System.out.println("Chef: Notified dish preparer that " + ingredient + " is "
+        IO.println("Chef", "Notified dish preparer that " + ingredient + " is "
                 + status.toLowerCase().replace("_", " ") + " for meal " + mealName);
     }
 }

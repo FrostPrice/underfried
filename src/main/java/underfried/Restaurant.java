@@ -182,19 +182,4 @@ public class Restaurant {
     public int getReadyDishCount() {
         return readyDishes.size();
     }
-
-    // ==================== Status Methods ====================
-
-    /**
-     * Print the current restaurant status
-     */
-    public void printStatus() {
-        System.out.println("=== " + restaurantName + " Status ===");
-        System.out.println("Clean Plates: " + cleanPlates);
-        System.out.println("Taken Plates: " + takenPlates);
-        System.out.println("Dirty Plates: " + dirtyPlates);
-        System.out.println("Pending Orders: " + pendingOrders.size() + " (" + pendingOrders + ")");
-        System.out.println("Ready Dishes: " + readyDishes.size() + " (" + readyDishes + ")");
-        System.out.println("================================");
-    }
 }

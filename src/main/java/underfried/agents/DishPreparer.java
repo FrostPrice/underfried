@@ -87,10 +87,10 @@ public class DishPreparer extends Agent {
             } else if (content.startsWith("CLEAN_PLATES:")) {
                 handleCleanPlates(content, sender);
             } else {
-                System.out.println("DishPreparer: Unknown message format: " + content);
+                IO.println("DishPreparer", "Unknown message format: " + content);
             }
         } catch (Exception e) {
-            System.out.println("DishPreparer: ERROR - Exception processing message: " + e.getMessage());
+            IO.println("DishPreparer", "ERROR - Exception processing message: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -100,7 +100,7 @@ public class DishPreparer extends Agent {
         // e.g. "INGREDIENT_READY:COOKED:meat:super_meat_boy"
         String[] parts = content.split(":");
         if (parts.length != 4) {
-            System.out.println("DishPreparer: ERROR - Invalid ingredient ready format: " + content);
+            IO.println("DishPreparer", "ERROR - Invalid ingredient ready format: " + content);
             return;
         }
 
@@ -108,7 +108,7 @@ public class DishPreparer extends Agent {
         String ingredient = parts[2];
         String mealName = parts[3];
 
-        System.out.println("DishPreparer: Received " + status.toLowerCase().replace("_", " ") +
+        IO.println("DishPreparer", "Received " + status.toLowerCase().replace("_", " ") +
                 " " + ingredient + " for meal " + mealName);
 
         // Add ingredient to ready list for this meal
@@ -126,20 +126,20 @@ public class DishPreparer extends Agent {
         // e.g. "CLEAN_PLATES:3"
         String[] parts = content.split(":");
         if (parts.length != 2) {
-            System.out.println("DishPreparer: ERROR - Invalid clean plates format: " + content);
+            IO.println("DishPreparer", "ERROR - Invalid clean plates format: " + content);
             return;
         }
 
         try {
             int plateCount = Integer.parseInt(parts[1]);
             restaurant.cleanPlates += plateCount;
-            System.out.println("DishPreparer: Received " + plateCount + " clean plates from " +
+            IO.println("DishPreparer", "Received " + plateCount + " clean plates from " +
                     sender.getName() + ". Total available: " + restaurant.cleanPlates);
 
             // Try to complete pending dishes now that we have plates
             checkPendingDishes();
         } catch (NumberFormatException e) {
-            System.out.println("DishPreparer: ERROR - Invalid plate count: " + parts[1]);
+            IO.println("DishPreparer", "ERROR - Invalid plate count: " + parts[1]);
         }
     }
 
@@ -147,7 +147,7 @@ public class DishPreparer extends Agent {
         // Get required ingredients for this meal
         String[] requiredIngredients = restaurant.getRecipe(mealName);
         if (requiredIngredients == null) {
-            System.out.println("DishPreparer: ERROR - Unknown meal: " + mealName);
+            IO.println("DishPreparer", "ERROR - Unknown meal: " + mealName);
             return;
         }
 
@@ -155,9 +155,9 @@ public class DishPreparer extends Agent {
         Set<String> ready = readyIngredients.get(mealName);
 
         if (ready != null && ready.containsAll(required)) {
-            System.out.println("DishPreparer: All ingredients ready for " + mealName + "!");
-            System.out.println("DishPreparer: Required: " + required);
-            System.out.println("DishPreparer: Ready: " + ready);
+            IO.println("DishPreparer", "All ingredients ready for " + mealName + "!");
+            IO.println("DishPreparer", "Required: " + required);
+            IO.println("DishPreparer", "Ready: " + ready);
 
             assembleDish(mealName);
         } else {
@@ -165,26 +165,25 @@ public class DishPreparer extends Agent {
             if (ready != null) {
                 missing.removeAll(ready);
             }
-            System.out.println("DishPreparer: Still waiting for ingredients for " + mealName +
+            IO.println("DishPreparer", "Still waiting for ingredients for " + mealName +
                     ". Missing: " + missing);
         }
     }
 
     private void assembleDish(String mealName) {
         // Validate shared state before assembling
-        System.out.println("DishPreparer: [VALIDATION] Checking resources for " + mealName);
-        System.out.println("DishPreparer: [VALIDATION] Clean plates available: " + restaurant.cleanPlates);
-        System.out.println("DishPreparer: [VALIDATION] Current ready dishes: " + restaurant.getReadyDishCount());
+        IO.println("DishPreparer", "[VALIDATION] Checking resources for " + mealName);
+        IO.println("DishPreparer", "[VALIDATION] Clean plates available: " + restaurant.cleanPlates);
+        IO.println("DishPreparer", "[VALIDATION] Current ready dishes: " + restaurant.getReadyDishCount());
 
         if (restaurant.cleanPlates <= 0) {
-            System.out.println(
-                    "DishPreparer: [VALIDATION] ✗ Cannot assemble " + mealName + " - no clean plates available!");
-            System.out.println("DishPreparer: Waiting for dishwasher to provide clean plates");
+            IO.println("DishPreparer", "[VALIDATION] ✗ Cannot assemble " + mealName + " - no clean plates available!");
+            IO.println("DishPreparer", "[VALIDATION] Waiting for dishwasher to provide clean plates");
             logToUI("Waiting for clean plates to assemble " + mealName);
             return;
         }
 
-        System.out.println("DishPreparer: [VALIDATION] ✓ Resources validated. Starting to assemble dish: " + mealName);
+        IO.println("DishPreparer", "[VALIDATION] ✓ Resources validated. Starting to assemble dish: " + mealName);
         logToUI("Assembling dish: " + mealName);
 
         if (gameWindow != null) {
@@ -197,7 +196,7 @@ public class DishPreparer extends Agent {
         try {
             Thread.sleep(assemblyTime);
         } catch (InterruptedException e) {
-            System.out.println("DishPreparer: ERROR - Dish assembly interrupted for " + mealName);
+            IO.println("DishPreparer", "ERROR - Dish assembly interrupted for " + mealName);
             Thread.currentThread().interrupt();
             return;
         }
@@ -210,10 +209,10 @@ public class DishPreparer extends Agent {
         // Remove ingredients from ready list since they're now used
         readyIngredients.remove(mealName);
 
-        System.out.println("DishPreparer: SUCCESS - Completed dish: " + mealName);
-        System.out.println("DishPreparer: [VALIDATION] Updated shared state - Clean plates: " + restaurant.cleanPlates);
-        System.out.println(
-                "DishPreparer: [VALIDATION] Updated shared state - Ready dishes: " + restaurant.readyDishes.size() +
+        IO.println("DishPreparer", "SUCCESS - Completed dish: " + mealName);
+        IO.println("DishPreparer", "[VALIDATION] Updated shared state - Clean plates: " + restaurant.cleanPlates);
+        IO.println("DishPreparer",
+                "[VALIDATION] Updated shared state - Ready dishes: " + restaurant.readyDishes.size() +
                         " (" + restaurant.readyDishes + ")");
     }
 
@@ -222,28 +221,5 @@ public class DishPreparer extends Agent {
         for (String mealName : new HashSet<>(readyIngredients.keySet())) {
             checkIfDishComplete(mealName);
         }
-    }
-
-    // Utility method to get current status
-    public void printStatus() {
-        System.out.println("=== DishPreparer Status ===");
-        System.out.println("Available clean plates: " + restaurant.cleanPlates);
-        System.out.println("Ready dishes: " + restaurant.readyDishes.size() + " (" + restaurant.readyDishes + ")");
-        System.out.println("Pending meals: " + readyIngredients.size());
-
-        if (!readyIngredients.isEmpty()) {
-            System.out.println("Pending meal details:");
-            for (Map.Entry<String, Set<String>> entry : readyIngredients.entrySet()) {
-                String meal = entry.getKey();
-                Set<String> ready = entry.getValue();
-                String[] required = restaurant.getRecipe(meal);
-                Set<String> requiredSet = new HashSet<>(Arrays.asList(required));
-                Set<String> missing = new HashSet<>(requiredSet);
-                missing.removeAll(ready);
-
-                System.out.println("  " + meal + " - Ready: " + ready + ", Missing: " + missing);
-            }
-        }
-        System.out.println("========================");
     }
 }

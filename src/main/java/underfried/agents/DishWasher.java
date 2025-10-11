@@ -80,10 +80,10 @@ public class DishWasher extends Agent {
             if (content.startsWith("DIRTY_PLATES:")) {
                 handleDirtyPlatesNotification(content, sender);
             } else {
-                System.out.println("DishWasher: Unknown message format: " + content);
+                IO.println("DishWasher", "Unknown message format: " + content);
             }
         } catch (Exception e) {
-            System.out.println("DishWasher: ERROR - Exception processing message: " + e.getMessage());
+            IO.println("DishWasher", "ERROR - Exception processing message: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -93,23 +93,23 @@ public class DishWasher extends Agent {
         // e.g. "DIRTY_PLATES:3"
         String[] parts = content.split(":");
         if (parts.length != 2) {
-            System.out.println("DishWasher: ERROR - Invalid dirty plates format: " + content);
+            IO.println("DishWasher", "ERROR - Invalid dirty plates format: " + content);
             return;
         }
 
         try {
             int plateCount = Integer.parseInt(parts[1]);
-            System.out.println("DishWasher: Received notification of " + plateCount + " dirty plates from " +
+            IO.println("DishWasher", "Received notification of " + plateCount + " dirty plates from " +
                     sender.getName());
-            System.out.println("DishWasher: Total dirty plates now available: " + restaurant.dirtyPlates);
+            IO.println("DishWasher", "Total dirty plates now available: " + restaurant.dirtyPlates);
 
             // The dirty plates are already added to restaurant.dirtyPlates by the waiter
             // We just acknowledge the notification
             if (plateCount > 0) {
-                System.out.println("DishWasher: Will start washing dishes now!");
+                IO.println("DishWasher", "Will start washing dishes now!");
             }
         } catch (NumberFormatException e) {
-            System.out.println("DishWasher: ERROR - Invalid plate count: " + parts[1]);
+            IO.println("DishWasher", "ERROR - Invalid plate count: " + parts[1]);
         }
     }
 
@@ -121,8 +121,8 @@ public class DishWasher extends Agent {
         // Determine how many plates to wash in this batch
         int platesToWash = Math.min(restaurant.dirtyPlates, washingCapacity);
 
-        System.out.println("DishWasher: Starting to wash " + platesToWash + " dirty plates");
-        System.out.println("DishWasher: Dirty plates available: " + restaurant.dirtyPlates);
+        IO.println("DishWasher", "Starting to wash " + platesToWash + " dirty plates");
+        IO.println("DishWasher", "Dirty plates available: " + restaurant.dirtyPlates);
         logToUI("Washing " + platesToWash + " dirty plates...");
 
         if (gameWindow != null) {
@@ -134,14 +134,14 @@ public class DishWasher extends Agent {
 
         int totalWashTime = platesToWash * washingTimePerPlate;
 
-        System.out.println("DishWasher: Washing " + platesToWash + " plates will take " +
+        IO.println("DishWasher", "Washing " + platesToWash + " plates will take " +
                 (totalWashTime / 1000) + " seconds");
 
         // Simulate washing time
         try {
             Thread.sleep(totalWashTime);
         } catch (InterruptedException e) {
-            System.out.println("DishWasher: ERROR - Washing interrupted");
+            IO.println("DishWasher", "ERROR - Washing interrupted");
             Thread.currentThread().interrupt();
             // Return dirty plates to the count if washing was interrupted
             restaurant.dirtyPlates += platesToWash;
@@ -149,8 +149,8 @@ public class DishWasher extends Agent {
         }
 
         // Washing completed successfully
-        System.out.println("DishWasher: SUCCESS - Finished washing " + platesToWash + " plates");
-        System.out.println("DishWasher: Remaining dirty plates: " + restaurant.dirtyPlates);
+        IO.println("DishWasher", "SUCCESS - Finished washing " + platesToWash + " plates");
+        IO.println("DishWasher", "Remaining dirty plates: " + restaurant.dirtyPlates);
         logToUI("Cleaned " + platesToWash + " plates!");
 
         // Send clean plates to DishPreparer
@@ -173,16 +173,7 @@ public class DishWasher extends Agent {
         // Send notification
         send(notification);
 
-        System.out.println("DishWasher: Sent " + cleanPlateCount + " clean plates to DishPreparer");
-        System.out.println("DishWasher: DishPreparer will update the restaurant's clean plate count");
-    }
-
-    public void printStatus() {
-        System.out.println("=== DishWasher Status ===");
-        System.out.println("Washing capacity: " + washingCapacity + " plates per batch");
-        System.out.println("Washing time per plate: " + (washingTimePerPlate / 1000) + " seconds");
-        System.out.println("Current dirty plates: " + restaurant.dirtyPlates);
-        System.out.println("Current clean plates: " + restaurant.cleanPlates);
-        System.out.println("========================");
+        IO.println("DishWasher", "Sent " + cleanPlateCount + " clean plates to DishPreparer");
+        IO.println("DishWasher", "DishPreparer will update the restaurant's clean plate count");
     }
 }
