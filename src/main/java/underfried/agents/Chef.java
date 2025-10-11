@@ -56,9 +56,11 @@ public class Chef extends Agent {
                     System.out.println("Chef: [VALIDATION] Pending orders in queue: " + expectedOrders);
 
                     // Process orders from message
+                    // Parse order format: "PLATE1\nPLATE2\n..." where each meal is on a new line
                     String[] meals = orderContent.split("\n");
                     System.out.println("Chef: Processing " + meals.length + " order(s) from message");
 
+                    // Process each meal in the order
                     for (String meal : meals) {
                         meal = meal.trim();
                         if (!meal.isEmpty()) {
