@@ -61,22 +61,39 @@ public class Waiter extends Agent {
             restaurant.dirtyPlates += emptyPlatesTaken;
 
             if (ordersTaken > 0) {
-                String orders = "";
                 String[] availableDishes = restaurant.getAvailableDishes().toArray(new String[0]);
+                String ordersMessage = "";
 
                 for (int i = 0; i < ordersTaken; i++) {
                     int dishIndex = (int) (Math.random() * availableDishes.length);
                     String dishOrdered = availableDishes[dishIndex];
-                    orders += dishOrdered + "\n";
-                    IO.println(getAID().getName() + ": Order of a " + dishOrdered + " to the chef.");
+
+                    // Add order to shared state for validation/control
+                    if (restaurant.addOrder(dishOrdered)) {
+                        ordersMessage += dishOrdered + "\n";
+                        IO.println(getAID().getName() + ": Added order for " + dishOrdered + " to tracking queue.");
+                        logToUI("New order: " + dishOrdered);
+                    } else {
+                        IO.println(getAID().getName() + ": ERROR - Unknown dish: " + dishOrdered);
+                    }
                 }
 
-                ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
-                AID chefAID = new AID("chef", AID.ISLOCALNAME);
-                notification.addReceiver(chefAID);
+                // Send ACL message to Chef with all orders
+                if (!ordersMessage.isEmpty()) {
+                    ACLMessage orderMessage = new ACLMessage(ACLMessage.REQUEST);
+                    AID chefAID = new AID("chef", AID.ISLOCALNAME);
+                    orderMessage.addReceiver(chefAID);
+                    orderMessage.setContent(ordersMessage.trim());
+                    send(orderMessage);
 
-                notification.setContent(orders.trim());
-                send(notification);
+                    if (gameWindow != null) {
+                        gameWindow.getGameState().updateAgentStatus("waiter", "Sent " + ordersTaken + " orders");
+                    }
+
+                    IO.println(getAID().getName() + ": Sent " + ordersTaken + " order(s) to Chef via message.");
+                    IO.println(getAID().getName() + ": [VALIDATION] Total orders in tracking queue: " +
+                            restaurant.getPendingOrderCount());
+                }
 
                 ordersTaken = 0;
             }
@@ -110,10 +127,15 @@ public class Waiter extends Agent {
         protected void execute() {
             goTo(WaiterState.KITCHEN);
 
-            int readyDishesCount = restaurant.readyDishes.size();
+            // Validate shared state before picking up dishes
+            int availableDishes = restaurant.readyDishes.size();
+            IO.println(
+                    getAID().getName() + ": [VALIDATION] Checking kitchen - Ready dishes: " + availableDishes);
 
-            if (readyDishesCount > 0) {
-                int mealsToTake = Math.min(2, readyDishesCount);
+            int mealsToTake = Math.min(2, availableDishes);
+
+            if (mealsToTake > 0) {
+                IO.println(getAID().getName() + ": [VALIDATION] ✓ Picking up " + mealsToTake + " dish(es)");
                 List<String> mealsToDeliver = new ArrayList<>();
 
                 for (int i = 0; i < mealsToTake; i++) {
@@ -121,6 +143,9 @@ public class Waiter extends Agent {
                     mealsToDeliver.add(doneDish);
                     IO.println(getAID().getName() + ": I've picked up the dish " + doneDish + " from the kitchen.");
                 }
+
+                IO.println(getAID().getName() + ": [VALIDATION] Remaining ready dishes: " +
+                        restaurant.readyDishes.size());
 
                 deliverMeals(mealsToDeliver);
             }
