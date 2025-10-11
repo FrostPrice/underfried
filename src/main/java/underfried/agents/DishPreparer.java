@@ -158,13 +158,19 @@ public class DishPreparer extends Agent {
     }
 
     private void assembleDish(String mealName) {
+        // Validate shared state before assembling
+        System.out.println("DishPreparer: [VALIDATION] Checking resources for " + mealName);
+        System.out.println("DishPreparer: [VALIDATION] Clean plates available: " + restaurant.cleanPlates);
+        System.out.println("DishPreparer: [VALIDATION] Current ready dishes: " + restaurant.getReadyDishCount());
+
         if (restaurant.cleanPlates <= 0) {
-            System.out.println("DishPreparer: Cannot assemble " + mealName + " - no clean plates available!");
+            System.out.println(
+                    "DishPreparer: [VALIDATION] ✗ Cannot assemble " + mealName + " - no clean plates available!");
             System.out.println("DishPreparer: Waiting for dishwasher to provide clean plates");
             return;
         }
 
-        System.out.println("DishPreparer: Starting to assemble dish: " + mealName);
+        System.out.println("DishPreparer: [VALIDATION] ✓ Resources validated. Starting to assemble dish: " + mealName);
 
         int assemblyTime = restaurant.getRecipe(mealName).length * 2000; // 2 seconds per ingredient
 
@@ -177,7 +183,7 @@ public class DishPreparer extends Agent {
             return;
         }
 
-        // Use a clean plate and add to ready dishes queue
+        // Use a clean plate and add to ready dishes queue (updates shared state)
         restaurant.cleanPlates--;
         restaurant.readyDishes.add(mealName);
 
@@ -185,9 +191,10 @@ public class DishPreparer extends Agent {
         readyIngredients.remove(mealName);
 
         System.out.println("DishPreparer: SUCCESS - Completed dish: " + mealName);
-        System.out.println("DishPreparer: Used 1 clean plate. Remaining plates: " + restaurant.cleanPlates);
-        System.out
-                .println("DishPreparer: Dish ready for service. Total ready dishes: " + restaurant.readyDishes.size());
+        System.out.println("DishPreparer: [VALIDATION] Updated shared state - Clean plates: " + restaurant.cleanPlates);
+        System.out.println(
+                "DishPreparer: [VALIDATION] Updated shared state - Ready dishes: " + restaurant.readyDishes.size() +
+                        " (" + restaurant.readyDishes + ")");
     }
 
     private void checkPendingDishes() {

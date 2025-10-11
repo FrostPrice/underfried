@@ -39,28 +39,39 @@ public class Waiter extends Agent {
 
                 restaurant.dirtyPlates += emptyPlatesTaken;
 
+                // Process orders: Send to Chef via ACL AND update shared state for validation
                 if (ordersTaken > 0) {
-                    String orders = "";
                     String[] availableDishes = restaurant.getAvailableDishes().toArray(new String[0]);
+                    String ordersMessage = "";
 
                     for (int i = 0; i < ordersTaken; i++) {
                         int dishIndex = (int) (Math.random() * availableDishes.length);
                         String dishOrdered = availableDishes[dishIndex];
-                        orders += dishOrdered + "\n";
-                        IO.println(getAID().getName() + ": Order of a " + dishOrdered + " to the chef.");
+
+                        // Add order to shared state for validation/control
+                        if (restaurant.addOrder(dishOrdered)) {
+                            ordersMessage += dishOrdered + "\n";
+                            IO.println(getAID().getName() + ": Added order for " + dishOrdered + " to tracking queue.");
+                        } else {
+                            IO.println(getAID().getName() + ": ERROR - Unknown dish: " + dishOrdered);
+                        }
                     }
 
-                    ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
-                    AID chefAID = new AID("chef", AID.ISLOCALNAME);
-                    notification.addReceiver(chefAID);
+                    // Send ACL message to Chef with all orders
+                    if (!ordersMessage.isEmpty()) {
+                        ACLMessage orderMessage = new ACLMessage(ACLMessage.REQUEST);
+                        AID chefAID = new AID("chef", AID.ISLOCALNAME);
+                        orderMessage.addReceiver(chefAID);
+                        orderMessage.setContent(ordersMessage.trim());
+                        send(orderMessage);
 
-                    notification.setContent(orders.trim());
-                    send(notification);
+                        IO.println(getAID().getName() + ": Sent " + ordersTaken + " order(s) to Chef via message.");
+                        IO.println(getAID().getName() + ": [VALIDATION] Total orders in tracking queue: " +
+                                restaurant.getPendingOrderCount());
+                    }
 
                     ordersTaken = 0;
-                }
-
-                // Notify the dishwasher about dirty plates
+                } // Notify the dishwasher about dirty plates
                 if (emptyPlatesTaken > 0) {
                     ACLMessage dirtyPlatesNotification = new ACLMessage(ACLMessage.INFORM);
                     AID dishWasherAID = new AID("dishWasher", AID.ISLOCALNAME);
@@ -78,12 +89,25 @@ public class Waiter extends Agent {
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 if (currentState == WaiterState.KITCHEN) {
-                    int mealsToTake = Math.min(2, restaurant.readyDishes.size());
+                    // Validate shared state before picking up dishes
+                    int availableDishes = restaurant.readyDishes.size();
+                    IO.println(
+                            getAID().getName() + ": [VALIDATION] Checking kitchen - Ready dishes: " + availableDishes);
 
-                    for (int i = 0; i < mealsToTake; i++) {
-                        String doneDish = restaurant.readyDishes.poll();
-                        mealsToDeliver.add(doneDish);
-                        IO.println(getAID().getName() + ": I've picked up the dish " + doneDish + " from the kitchen.");
+                    int mealsToTake = Math.min(2, availableDishes);
+
+                    if (mealsToTake > 0) {
+                        IO.println(getAID().getName() + ": [VALIDATION] ✓ Picking up " + mealsToTake + " dish(es)");
+
+                        for (int i = 0; i < mealsToTake; i++) {
+                            String doneDish = restaurant.readyDishes.poll();
+                            mealsToDeliver.add(doneDish);
+                            IO.println(getAID().getName() + ": I've picked up the dish " + doneDish
+                                    + " from the kitchen.");
+                        }
+
+                        IO.println(getAID().getName() + ": [VALIDATION] Remaining ready dishes: " +
+                                restaurant.readyDishes.size());
                     }
 
                     deliverMeals();
