@@ -53,7 +53,7 @@ public class GameState {
         stations.add(new Station("Washing", StationType.WASHING_STATION, 7, 10, 2, 2));
 
         // Pass-through counter
-        stations.add(new Station(null, StationType.COUNTER, 9, 6, 2, 3));
+        stations.add(new Station("Counter", StationType.COUNTER, 9, 6, 2, 3));
 
         // Dining tables
         stations.add(new Station(null, StationType.TABLE, 12, 2, 1.5, 1.5));
