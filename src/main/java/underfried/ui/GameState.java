@@ -29,8 +29,6 @@ public class GameState {
     private static final double DISH_WASHER_START_X = 7.5;
     private static final double DISH_WASHER_START_Y = 11.5;
 
-    private int frameCount = 0;
-
     public GameState(Restaurant restaurant) {
         this.restaurant = restaurant;
         this.agents = new ArrayList<>();
@@ -88,8 +86,6 @@ public class GameState {
     }
 
     public void update() {
-        frameCount++;
-
         // Update all agents
         for (AgentSprite agent : agents) {
             agent.update();
