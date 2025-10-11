@@ -182,12 +182,18 @@ public class Waiter extends Agent {
     protected void takeEmptyPlates() {
         goTo(WaiterState.DINING_AREA);
 
-        for (int i = 0; i < Math.min(restaurant.takenPlates, 5); i++) {
+        // Try to take up to 5 empty plates, but only if they're actually available
+        int attemptsMade = 0;
+        int maxAttempts = 5;
+
+        while (attemptsMade < maxAttempts && restaurant.takenPlates > 0) {
             if (Math.random() < 0.3) {
                 wait(1000);
                 IO.println(getAID().getName() + ": I took an empty plate.");
                 emptyPlatesTaken++;
+                restaurant.takenPlates--; // Decrement taken plates immediately
             }
+            attemptsMade++;
         }
     }
 
@@ -198,6 +204,8 @@ public class Waiter extends Agent {
             wait(1000);
             IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
             logToUI("Delivered " + meal + " to table");
+            // When a meal is delivered, the customer now has a plate
+            restaurant.takenPlates++;
         }
     }
 

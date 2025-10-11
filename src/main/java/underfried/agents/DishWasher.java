@@ -119,7 +119,14 @@ public class DishWasher extends Agent {
         }
 
         // Determine how many plates to wash in this batch
+        // Use Math.min to ensure we never try to wash more plates than are available
         int platesToWash = Math.min(restaurant.dirtyPlates, washingCapacity);
+
+        // Double-check that we have plates to wash (guard against race conditions)
+        if (platesToWash <= 0) {
+            IO.println("DishWasher", "No plates to wash (race condition prevented)");
+            return;
+        }
 
         IO.println("DishWasher", "Starting to wash " + platesToWash + " dirty plates");
         IO.println("DishWasher", "Dirty plates available: " + restaurant.dirtyPlates);
@@ -129,7 +136,8 @@ public class DishWasher extends Agent {
             gameWindow.getGameState().updateAgentStatus("dishWasher", "Washing");
         }
 
-        // Remove dirty plates from the global count
+        // Remove dirty plates from the global count immediately to prevent other agents
+        // from accessing them
         restaurant.dirtyPlates -= platesToWash;
 
         int totalWashTime = platesToWash * washingTimePerPlate;
