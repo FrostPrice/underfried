@@ -6,21 +6,27 @@ import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import underfried.Restaurant;
 import underfried.ChefKnowledge;
+import underfried.ui.GameWindow;
 
 public class Chef extends Agent {
     private Restaurant restaurant;
     private ChefKnowledge chefKnowledge;
+    private GameWindow gameWindow;
 
     @Override
     protected void setup() {
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             restaurant = (Restaurant) args[0];
+            if (args.length > 1) {
+                gameWindow = (GameWindow) args[1];
+            }
         } else {
             throw new IllegalArgumentException("Chef agent missing required arguments: Restaurant instance");
         }
 
         System.out.println("Chef Agent " + getAID().getName() + " is ready to cook!");
+        logToUI("Chef ready to cook!");
 
         // Initialize chef knowledge
         chefKnowledge = new ChefKnowledge(getAID().getLocalName());
@@ -33,6 +39,12 @@ public class Chef extends Agent {
 
         // Add behavior to handle orders from the restaurant queue
         addBehaviour(new OrderHandlingBehaviour());
+    }
+
+    private void logToUI(String message) {
+        if (gameWindow != null) {
+            gameWindow.appendLog("[Chef] " + message);
+        }
     }
 
     @Override
@@ -96,12 +108,18 @@ public class Chef extends Agent {
 
     private void processMeal(String mealName) {
         System.out.println("Chef: Starting to prepare ingredients for meal: " + mealName);
+        logToUI("Processing order: " + mealName);
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("chef", "Preparing " + mealName);
+        }
 
         // Get the recipe from the restaurant menu
         String[] ingredients = restaurant.getRecipe(mealName);
         if (ingredients == null) {
             System.out.println("Chef: ERROR - Unknown meal: " + mealName);
             System.out.println("Chef: Available meals: " + restaurant.getAvailableDishes());
+            logToUI("ERROR: Unknown meal - " + mealName);
             return;
         }
 
@@ -112,6 +130,7 @@ public class Chef extends Agent {
         }
 
         System.out.println("Chef: Finished processing all ingredients for meal: " + mealName);
+        logToUI("Completed: " + mealName);
     }
 
     private void processIngredient(String ingredient, String mealName) {

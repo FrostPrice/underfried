@@ -9,6 +9,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import underfried.Restaurant;
+import underfried.ui.GameWindow;
 
 enum WaiterState {
     KITCHEN, DINING_AREA
@@ -16,6 +17,7 @@ enum WaiterState {
 
 public class Waiter extends Agent {
     private Restaurant restaurant = null;
+    private GameWindow gameWindow = null;
     private WaiterState currentState = WaiterState.KITCHEN;
 
     private int ordersTaken = 0;
@@ -24,7 +26,13 @@ public class Waiter extends Agent {
     private List<String> mealsToDeliver = new ArrayList<>();
 
     protected void setup() {
-        restaurant = (Restaurant) getArguments()[0];
+        Object[] args = getArguments();
+        restaurant = (Restaurant) args[0];
+        if (args.length > 1) {
+            gameWindow = (GameWindow) args[1];
+        }
+
+        logToUI("Waiter ready to serve!");
 
         addBehaviour(new TickerBehaviour(this, 3000) {
             public void onTick() {
@@ -52,6 +60,7 @@ public class Waiter extends Agent {
                         if (restaurant.addOrder(dishOrdered)) {
                             ordersMessage += dishOrdered + "\n";
                             IO.println(getAID().getName() + ": Added order for " + dishOrdered + " to tracking queue.");
+                            logToUI("New order: " + dishOrdered);
                         } else {
                             IO.println(getAID().getName() + ": ERROR - Unknown dish: " + dishOrdered);
                         }
@@ -64,6 +73,10 @@ public class Waiter extends Agent {
                         orderMessage.addReceiver(chefAID);
                         orderMessage.setContent(ordersMessage.trim());
                         send(orderMessage);
+
+                        if (gameWindow != null) {
+                            gameWindow.getGameState().updateAgentStatus("waiter", "Sent " + ordersTaken + " orders");
+                        }
 
                         IO.println(getAID().getName() + ": Sent " + ordersTaken + " order(s) to Chef via message.");
                         IO.println(getAID().getName() + ": [VALIDATION] Total orders in tracking queue: " +
@@ -165,7 +178,14 @@ public class Waiter extends Agent {
         for (String meal : mealsToDeliver) {
             wait(1000);
             IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
+            logToUI("Delivered " + meal + " to table");
         }
         mealsToDeliver.clear();
+    }
+
+    private void logToUI(String message) {
+        if (gameWindow != null) {
+            gameWindow.appendLog("[Waiter] " + message);
+        }
     }
 }

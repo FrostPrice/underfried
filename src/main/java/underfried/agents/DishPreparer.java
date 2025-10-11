@@ -5,6 +5,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import underfried.Restaurant;
+import underfried.ui.GameWindow;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 
 public class DishPreparer extends Agent {
     private Restaurant restaurant;
+    private GameWindow gameWindow;
 
     // Track ingredients ready for each meal
     // Key: meal name, Value: Set of prepared ingredients
@@ -23,11 +25,15 @@ public class DishPreparer extends Agent {
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             restaurant = (Restaurant) args[0];
+            if (args.length > 1) {
+                gameWindow = (GameWindow) args[1];
+            }
         } else {
             throw new IllegalArgumentException("DishPreparer agent missing required arguments: Restaurant instance");
         }
 
         System.out.println("DishPreparer Agent " + getAID().getName() + " is ready to prepare dishes!");
+        logToUI("DishPreparer ready to assemble dishes!");
 
         // Initialize state
         readyIngredients = new HashMap<>();
@@ -39,6 +45,12 @@ public class DishPreparer extends Agent {
 
         // Add behavior to handle incoming messages
         addBehaviour(new MessageHandlingBehaviour());
+    }
+
+    private void logToUI(String message) {
+        if (gameWindow != null) {
+            gameWindow.appendLog("[DishPreparer] " + message);
+        }
     }
 
     @Override
@@ -167,10 +179,16 @@ public class DishPreparer extends Agent {
             System.out.println(
                     "DishPreparer: [VALIDATION] ✗ Cannot assemble " + mealName + " - no clean plates available!");
             System.out.println("DishPreparer: Waiting for dishwasher to provide clean plates");
+            logToUI("Waiting for clean plates to assemble " + mealName);
             return;
         }
 
         System.out.println("DishPreparer: [VALIDATION] ✓ Resources validated. Starting to assemble dish: " + mealName);
+        logToUI("Assembling dish: " + mealName);
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("dishPreparer", "Assembling " + mealName);
+        }
 
         int assemblyTime = restaurant.getRecipe(mealName).length * 2000; // 2 seconds per ingredient
 
@@ -186,6 +204,7 @@ public class DishPreparer extends Agent {
         // Use a clean plate and add to ready dishes queue (updates shared state)
         restaurant.cleanPlates--;
         restaurant.readyDishes.add(mealName);
+        logToUI("Dish ready: " + mealName + " (placed on counter)");
 
         // Remove ingredients from ready list since they're now used
         readyIngredients.remove(mealName);
