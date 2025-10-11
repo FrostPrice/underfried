@@ -94,35 +94,6 @@ public class GameState {
         for (AgentSprite agent : agents) {
             agent.update();
         }
-
-        // Simulate agent behaviors based on restaurant state
-        if (frameCount % 60 == 0) { // Update every second
-            updateAgentBehaviors();
-        }
-    }
-
-    private void updateAgentBehaviors() {
-        // DishPreparer behavior - stay at prep station when preparing
-        AgentSprite dishPreparer = agentMap.get("dishPreparer");
-        if (dishPreparer != null) {
-            if (restaurant.getPendingOrderCount() > 0) {
-                dishPreparer.setTargetPosition(8, 2);
-                dishPreparer.setStatus("Preparing");
-            } else {
-                dishPreparer.setStatus("Idle");
-            }
-        }
-
-        // DishWasher behavior - work at washing station when dirty plates exist
-        AgentSprite dishWasher = agentMap.get("dishWasher");
-        if (dishWasher != null) {
-            if (restaurant.dirtyPlates > 0) {
-                dishWasher.setTargetPosition(8, 11);
-                dishWasher.setStatus("Washing");
-            } else {
-                dishWasher.setStatus("Idle");
-            }
-        }
     }
 
     public void updateAgentStatus(String agentName, String status) {
