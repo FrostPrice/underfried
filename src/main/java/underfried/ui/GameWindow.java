@@ -3,6 +3,7 @@ package underfried.ui;
 import underfried.Restaurant;
 import javax.swing.*;
 import java.awt.*;
+import underfried.IO;
 
 /**
  * Main window for the restaurant simulation game
@@ -288,6 +289,46 @@ public class GameWindow extends JFrame {
             // Default to System for unrecognized logs
             return showSystem.isSelected();
         }
+    }
+
+    public void wait(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void waitUntilArrived(String agentName, double targetX, double targetY) {
+        final double ARRIVAL_THRESHOLD = 0.1; // Consider arrived if within 0.1 units
+        final int MAX_WAIT_TIME = 10000; // Maximum 10 seconds wait
+        final int CHECK_INTERVAL = 100; // Check every 100ms
+
+        long startTime = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - startTime < MAX_WAIT_TIME) {
+            // Get current agent position from GameState
+            double currentX = this.getGameState().getAgent(agentName).getX();
+            double currentY = this.getGameState().getAgent(agentName).getY();
+
+            // Calculate distance to target
+            double distance = Math.sqrt(
+                    Math.pow(targetX - currentX, 2) +
+                            Math.pow(targetY - currentY, 2));
+
+            // Check if arrived
+            if (distance < ARRIVAL_THRESHOLD) {
+                String capitalizedName = agentName.substring(0, 1).toUpperCase() + agentName.substring(1);
+                IO.println(capitalizedName, "Arrived at destination (" + targetX + ", " + targetY + ")");
+                return;
+            }
+
+            // Wait a bit before checking again
+            wait(CHECK_INTERVAL);
+        }
+
+        // Timeout - agent took too long to arrive
+        IO.println("Chef", "WARNING - Timeout waiting to arrive at (" + targetX + ", " + targetY + ")");
     }
 
     public GameState getGameState() {
