@@ -5,9 +5,11 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import underfried.Restaurant;
+import underfried.ui.GameWindow;
 
 public class DishWasher extends Agent {
     private Restaurant restaurant;
+    private GameWindow gameWindow;
     private int washingCapacity = 5; // Maximum plates that can be washed at once
     private int washingTimePerPlate = 2000; // 2 seconds per plate in milliseconds
 
@@ -16,6 +18,9 @@ public class DishWasher extends Agent {
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             restaurant = (Restaurant) args[0];
+            if (args.length > 1) {
+                gameWindow = (GameWindow) args[1];
+            }
         } else {
             throw new IllegalArgumentException("DishWasher agent missing required arguments: Restaurant instance");
         }
@@ -24,8 +29,15 @@ public class DishWasher extends Agent {
         System.out.println("DishWasher: Washing capacity: " + washingCapacity + " plates at once");
         System.out.println("DishWasher: Washing time: " + (washingTimePerPlate / 1000) + " seconds per plate");
         System.out.println("DishWasher: Current dirty plates in restaurant: " + restaurant.dirtyPlates);
+        logToUI("DishWasher ready to clean plates!");
 
         addBehaviour(new DishWashingBehaviour());
+    }
+
+    private void logToUI(String message) {
+        if (gameWindow != null) {
+            gameWindow.appendLog("[DishWasher] " + message);
+        }
     }
 
     @Override
@@ -110,6 +122,11 @@ public class DishWasher extends Agent {
 
         System.out.println("DishWasher: Starting to wash " + platesToWash + " dirty plates");
         System.out.println("DishWasher: Dirty plates available: " + restaurant.dirtyPlates);
+        logToUI("Washing " + platesToWash + " dirty plates...");
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("dishWasher", "Washing");
+        }
 
         // Remove dirty plates from the global count
         restaurant.dirtyPlates -= platesToWash;
@@ -133,6 +150,7 @@ public class DishWasher extends Agent {
         // Washing completed successfully
         System.out.println("DishWasher: SUCCESS - Finished washing " + platesToWash + " plates");
         System.out.println("DishWasher: Remaining dirty plates: " + restaurant.dirtyPlates);
+        logToUI("Cleaned " + platesToWash + " plates!");
 
         // Send clean plates to DishPreparer
         sendCleanPlatesToDishPreparer(platesToWash);

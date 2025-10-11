@@ -7,6 +7,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import underfried.Restaurant;
+import underfried.ui.GameWindow;
 import underfried.behaviors.ConditionalTickerBehavior;
 
 enum WaiterState {
@@ -16,6 +17,7 @@ enum WaiterState {
 
 public class Waiter extends Agent {
     private Restaurant restaurant = null;
+    private GameWindow gameWindow = null;
     private WaiterState currentState = WaiterState.KITCHEN;
 
     private boolean isBusy = false;
@@ -24,7 +26,13 @@ public class Waiter extends Agent {
     private int emptyPlatesTaken = 0;
 
     protected void setup() {
-        restaurant = (Restaurant) getArguments()[0];
+        Object[] args = getArguments();
+        restaurant = (Restaurant) args[0];
+        if (args.length > 1) {
+            gameWindow = (GameWindow) args[1];
+        }
+
+        logToUI("Waiter ready to serve!");
 
         addBehaviour(new PeekDiningAreaBehavior(this, 10000));
         addBehaviour(new PeekReadyDishesBehavior(this, 5000));
@@ -163,6 +171,13 @@ public class Waiter extends Agent {
         for (String meal : mealsToDeliver) {
             wait(1000);
             IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
+            logToUI("Delivered " + meal + " to table");
+        }
+    }
+
+    private void logToUI(String message) {
+        if (gameWindow != null) {
+            gameWindow.appendLog("[Waiter] " + message);
         }
     }
 }

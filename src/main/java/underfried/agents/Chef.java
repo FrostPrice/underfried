@@ -6,21 +6,27 @@ import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import underfried.Restaurant;
 import underfried.ChefKnowledge;
+import underfried.ui.GameWindow;
 
 public class Chef extends Agent {
     private Restaurant restaurant;
     private ChefKnowledge chefKnowledge;
+    private GameWindow gameWindow;
 
     @Override
     protected void setup() {
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             restaurant = (Restaurant) args[0];
+            if (args.length > 1) {
+                gameWindow = (GameWindow) args[1];
+            }
         } else {
             throw new IllegalArgumentException("Chef agent missing required arguments: Restaurant instance");
         }
 
         System.out.println("Chef Agent " + getAID().getName() + " is ready to cook!");
+        logToUI("Chef ready to cook!");
 
         // Initialize chef knowledge
         chefKnowledge = new ChefKnowledge(getAID().getLocalName());
@@ -31,8 +37,14 @@ public class Chef extends Agent {
                 chefKnowledge.getCookableIngredients().size()
                 + " ingredients");
 
-        // Add behavior to handle incoming orders
+        // Add behavior to handle orders from the restaurant queue
         addBehaviour(new OrderHandlingBehaviour());
+    }
+
+    private void logToUI(String message) {
+        if (gameWindow != null) {
+            gameWindow.appendLog("[Chef] " + message);
+        }
     }
 
     @Override
@@ -43,6 +55,7 @@ public class Chef extends Agent {
     private class OrderHandlingBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
+            // Receive orders via ACL messages
             ACLMessage msg = receive();
             if (msg != null) {
                 System.out.println("Chef received order: " + msg.getContent());
@@ -50,9 +63,42 @@ public class Chef extends Agent {
                 // Parse the order content
                 String orderContent = msg.getContent();
                 if (orderContent != null && !orderContent.trim().isEmpty()) {
-                    processOrder(orderContent, msg.getSender());
+                    // Validate against shared state
+                    int expectedOrders = restaurant.getPendingOrderCount();
+                    System.out.println("Chef: [VALIDATION] Pending orders in queue: " + expectedOrders);
+
+                    // Process orders from message
+                    // Parse order format: "PLATE1\nPLATE2\n..." where each meal is on a new line
+                    String[] meals = orderContent.split("\n");
+                    System.out.println("Chef: Processing " + meals.length + " order(s) from message");
+
+                    // Process each meal in the order
+                    for (String meal : meals) {
+                        meal = meal.trim();
+                        if (!meal.isEmpty()) {
+                            // Validate this order exists in shared state
+                            String queuedOrder = restaurant.getNextOrder();
+                            if (queuedOrder != null && queuedOrder.equalsIgnoreCase(meal)) {
+                                System.out.println("Chef: [VALIDATION] ✓ Order '" + meal +
+                                        "' matches queued order '" + queuedOrder + "'");
+                                processMeal(meal);
+                            } else if (queuedOrder != null) {
+                                System.out.println("Chef: [VALIDATION] ⚠ WARNING - Message order '" + meal +
+                                        "' doesn't match queued order '" + queuedOrder + "'");
+                                // Process anyway but log discrepancy
+                                processMeal(meal);
+                            } else {
+                                System.out.println("Chef: [VALIDATION] ⚠ WARNING - No queued order found for '" +
+                                        meal + "' but processing from message");
+                                processMeal(meal);
+                            }
+                        }
+                    }
+
+                    System.out.println("Chef: [VALIDATION] Remaining orders in queue: " +
+                            restaurant.getPendingOrderCount());
                 } else {
-                    System.out.println("Chef received empty order from " + msg.getSender().getName());
+                    System.out.println("Chef: ERROR - Received empty order message");
                 }
             } else {
                 block();
@@ -60,52 +106,20 @@ public class Chef extends Agent {
         }
     }
 
-    private void processOrder(String orderContent, AID sender) {
-        try {
-            // Validate input
-            if (orderContent == null || orderContent.trim().isEmpty()) {
-                System.out.println("Chef: ERROR - Received empty order from " + sender.getName());
-                sendErrorReply(sender, "Empty order content");
-                return;
-            }
-
-            System.out.println("Chef: Received order from " + sender.getName() + ": " + orderContent);
-
-            // Parse order format: "PLATE1\nPLATE2\n..." where each meal is on a new line
-            String[] meals = orderContent.split("\n");
-
-            if (meals.length == 0) {
-                System.out.println("Chef: ERROR - No meals found in order from " + sender.getName());
-                sendErrorReply(sender, "No meals found in order");
-                return;
-            }
-
-            // Process each meal
-            for (String meal : meals) {
-                meal = meal.trim();
-                if (!meal.isEmpty()) {
-                    System.out.println("Chef: Processing meal: " + meal);
-                    processMeal(meal);
-                }
-            }
-
-            System.out.println("Chef: Finished processing all requested meals from " + sender.getName());
-
-        } catch (Exception e) {
-            System.out.println("Chef: ERROR - Exception processing order: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorReply(sender, "Processing error: " + e.getMessage());
-        }
-    }
-
     private void processMeal(String mealName) {
         System.out.println("Chef: Starting to prepare ingredients for meal: " + mealName);
+        logToUI("Processing order: " + mealName);
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("chef", "Preparing " + mealName);
+        }
 
         // Get the recipe from the restaurant menu
         String[] ingredients = restaurant.getRecipe(mealName);
         if (ingredients == null) {
             System.out.println("Chef: ERROR - Unknown meal: " + mealName);
             System.out.println("Chef: Available meals: " + restaurant.getAvailableDishes());
+            logToUI("ERROR: Unknown meal - " + mealName);
             return;
         }
 
@@ -116,6 +130,7 @@ public class Chef extends Agent {
         }
 
         System.out.println("Chef: Finished processing all ingredients for meal: " + mealName);
+        logToUI("Completed: " + mealName);
     }
 
     private void processIngredient(String ingredient, String mealName) {
@@ -230,17 +245,4 @@ public class Chef extends Agent {
         System.out.println("Chef: Notified dish preparer that " + ingredient + " is "
                 + status.toLowerCase().replace("_", " ") + " for meal " + mealName);
     }
-
-    private void sendErrorReply(AID recipient, String errorMessage) {
-        try {
-            ACLMessage errorReply = new ACLMessage(ACLMessage.FAILURE);
-            errorReply.addReceiver(recipient);
-            errorReply.setContent("CHEF_ERROR:" + errorMessage);
-            send(errorReply);
-            System.out.println("Chef: Sent error reply to " + recipient.getName() + ": " + errorMessage);
-        } catch (Exception e) {
-            System.out.println("Chef: ERROR - Failed to send error reply: " + e.getMessage());
-        }
-    }
-
 }
