@@ -39,6 +39,63 @@ public class Waiter extends Agent {
         addBehaviour(new PeekReadyDishesBehavior(this, 5000));
     }
 
+    /**
+     * Check for rats and bonk them!
+     */
+    private void checkForRats() {
+        if (restaurant.getConditionCount(Restaurant.EnvironmentalCondition.RAT) > 0) {
+            java.util.List<Restaurant.ActiveCondition> rats = restaurant
+                    .getConditionsByType(Restaurant.EnvironmentalCondition.RAT);
+
+            for (Restaurant.ActiveCondition rat : rats) {
+                if (!rat.resolved) {
+                    IO.println(getAID().getName(), "RAT SPOTTED at (" + rat.x + ", " + rat.y + ")!");
+                    logToUI("ALERT: Rat spotted by Waiter!");
+
+                    if (gameWindow != null) {
+                        gameWindow.getGameState().updateAgentStatus("waiter", "Chasing rat!");
+                    }
+
+                    // Move to rat location
+                    IO.println(getAID().getName(), "Moving to catch the rat...");
+                    if (gameWindow != null) {
+                        gameWindow.getGameState().moveAgent("waiter", rat.x, rat.y);
+                        gameWindow.waitUntilArrived("waiter", rat.x, rat.y);
+                    }
+
+                    // BONK the rat!
+                    IO.println(getAID().getName(), "BONK! Got that rat!");
+                    logToUI("Waiter bonked the rat!");
+
+                    if (gameWindow != null) {
+                        gameWindow.getGameState().updateAgentStatus("waiter", "Bonked rat!");
+                    }
+
+                    // Wait a moment for the bonk animation
+                    try {
+                        Thread.sleep(1500);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    // Alert other agents about successful rat elimination
+                    ACLMessage alert = new ACLMessage(ACLMessage.INFORM);
+                    alert.addReceiver(new AID("chef", AID.ISLOCALNAME));
+                    alert.addReceiver(new AID("dishWasher", AID.ISLOCALNAME));
+                    alert.setContent("RAT_ELIMINATED:" + rat.x + "," + rat.y);
+                    send(alert);
+
+                    IO.println(getAID().getName(), "Alerted other agents - rat has been eliminated!");
+
+                    // Mark as resolved (rat was bonked and eliminated)
+                    restaurant.resolveCondition(rat);
+                    IO.println(getAID().getName(), "Rat eliminated successfully!");
+                    logToUI("Rat eliminated by Waiter!");
+                }
+            }
+        }
+    }
+
     private class PeekDiningAreaBehavior extends ConditionalTickerBehavior {
         public PeekDiningAreaBehavior(Agent a, long timeout) {
             super(a, timeout);
@@ -52,6 +109,10 @@ public class Waiter extends Agent {
             IO.println(getAID().getName() + ": I'll take a look at the tables.");
 
             isBusy = true;
+
+            // Check for rats first
+            checkForRats();
+
             takeOrders();
             takeEmptyPlates();
 
