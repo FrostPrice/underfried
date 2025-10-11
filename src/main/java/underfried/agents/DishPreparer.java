@@ -13,9 +13,15 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
 
+enum DishPreparerState {
+    COUNTER,
+    DISH_PREPARING_AREA,
+}
+
 public class DishPreparer extends Agent {
     private Restaurant restaurant;
     private GameWindow gameWindow;
+    private DishPreparerState currentState = DishPreparerState.DISH_PREPARING_AREA;
 
     // Track ingredients ready for each meal
     // Key: meal name, Value: Set of prepared ingredients
@@ -61,6 +67,37 @@ public class DishPreparer extends Agent {
                 " (" + restaurant.readyDishes + "), Clean plates: " + restaurant.cleanPlates);
     }
 
+    protected void goTo(DishPreparerState destination) {
+        if (currentState == destination)
+            return;
+
+        double targetX = 0, targetY = 0;
+
+        // Update UI with movement BEFORE changing state
+        if (gameWindow != null) {
+            switch (destination) {
+                case COUNTER:
+                    targetX = 9.5;
+                    targetY = 7.0;
+                    gameWindow.getGameState().moveAgent("dishPreparer", targetX, targetY);
+                    gameWindow.getGameState().updateAgentStatus("dishPreparer", "Going to counter");
+                    break;
+                case DISH_PREPARING_AREA:
+                    targetX = 7.5;
+                    targetY = 2.5;
+                    gameWindow.getGameState().moveAgent("dishPreparer", targetX, targetY);
+                    gameWindow.getGameState().updateAgentStatus("dishPreparer", "Going to prep area");
+                    break;
+            }
+
+            // Wait until agent has arrived at destination
+            gameWindow.waitUntilArrived("dishPreparer", targetX, targetY);
+        }
+
+        // Update state AFTER arriving at destination
+        currentState = destination;
+    }
+
     private class MessageHandlingBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
@@ -96,6 +133,9 @@ public class DishPreparer extends Agent {
     }
 
     private void handleIngredientReady(String content, AID sender) {
+        // Move to prep area to receive the ingredient
+        goTo(DishPreparerState.DISH_PREPARING_AREA);
+
         // Parse message format: "INGREDIENT_READY:STATUS:INGREDIENT:MEAL"
         // e.g. "INGREDIENT_READY:COOKED:meat:super_meat_boy"
         String[] parts = content.split(":");
@@ -110,6 +150,10 @@ public class DishPreparer extends Agent {
 
         IO.println("DishPreparer", "Received " + status.toLowerCase().replace("_", " ") +
                 " " + ingredient + " for meal " + mealName);
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("dishPreparer", "Received " + ingredient + " for " + mealName);
+        }
 
         // Add ingredient to ready list for this meal
         if (!readyIngredients.containsKey(mealName)) {
@@ -136,6 +180,10 @@ public class DishPreparer extends Agent {
             IO.println("DishPreparer", "Received " + plateCount + " clean plates from " +
                     sender.getName() + ". Total available: " + restaurant.cleanPlates);
 
+            if (gameWindow != null) {
+                gameWindow.getGameState().updateAgentStatus("dishPreparer", "Received " + plateCount + " clean plates");
+            }
+
             // Try to complete pending dishes now that we have plates
             checkPendingDishes();
         } catch (NumberFormatException e) {
@@ -159,6 +207,10 @@ public class DishPreparer extends Agent {
             IO.println("DishPreparer", "Required: " + required);
             IO.println("DishPreparer", "Ready: " + ready);
 
+            if (gameWindow != null) {
+                gameWindow.getGameState().updateAgentStatus("dishPreparer", "Ready to assemble " + mealName);
+            }
+
             assembleDish(mealName);
         } else {
             Set<String> missing = new HashSet<>(required);
@@ -167,6 +219,11 @@ public class DishPreparer extends Agent {
             }
             IO.println("DishPreparer", "Still waiting for ingredients for " + mealName +
                     ". Missing: " + missing);
+
+            if (gameWindow != null) {
+                gameWindow.getGameState().updateAgentStatus("dishPreparer",
+                        "Waiting for " + missing.size() + " ingredient(s)");
+            }
         }
     }
 
@@ -204,7 +261,14 @@ public class DishPreparer extends Agent {
         // Use a clean plate and add to ready dishes queue (updates shared state)
         restaurant.cleanPlates--;
         restaurant.readyDishes.add(mealName);
+
+        // Move to counter to place the completed dish
+        goTo(DishPreparerState.COUNTER);
         logToUI("Dish ready: " + mealName + " (placed on counter)");
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("dishPreparer", "Placed " + mealName + " on counter");
+        }
 
         // Remove ingredients from ready list since they're now used
         readyIngredients.remove(mealName);
