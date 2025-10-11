@@ -104,9 +104,84 @@ public class Chef extends Agent {
         currentState = destination;
     }
 
+    /**
+     * Check for fires in kitchen stations and handle them
+     * 
+     * @return true if a fire was found and being handled, false otherwise
+     */
+    private boolean checkAndHandleFires() {
+        if (restaurant.getConditionCount(Restaurant.EnvironmentalCondition.FIRE) > 0) {
+            java.util.List<Restaurant.ActiveCondition> fires = restaurant
+                    .getConditionsByType(Restaurant.EnvironmentalCondition.FIRE);
+
+            for (Restaurant.ActiveCondition fire : fires) {
+                if (!fire.resolved) {
+                    IO.println("Chef", "FIRE DETECTED at (" + fire.x + ", " + fire.y + ")! Extinguishing...");
+                    logToUI("ALERT: Fire detected! Chef extinguishing fire...");
+
+                    // Move to fire location
+                    if (gameWindow != null) {
+                        gameWindow.getGameState().moveAgent("chef", fire.x, fire.y);
+                        gameWindow.getGameState().updateAgentStatus("chef", "Extinguishing fire!");
+                        gameWindow.waitUntilArrived("chef", fire.x, fire.y);
+                    }
+
+                    // Simulate extinguishing time (3 seconds)
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    // Resolve the fire
+                    restaurant.resolveCondition(fire);
+                    IO.println("Chef", "✓ Fire extinguished successfully!");
+                    logToUI("Fire extinguished by Chef");
+
+                    if (gameWindow != null) {
+                        gameWindow.getGameState().updateAgentStatus("chef", "Fire extinguished");
+                    }
+
+                    return true; // Handled one fire, check again next cycle
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check for and discard burned food at current location
+     */
+    private void checkAndDiscardBurnedFood(double x, double y) {
+        java.util.List<Restaurant.ActiveCondition> burnedFoods = restaurant
+                .getConditionsByType(Restaurant.EnvironmentalCondition.BURNED_FOOD);
+
+        for (Restaurant.ActiveCondition burnedFood : burnedFoods) {
+            if (!burnedFood.resolved &&
+                    Math.abs(burnedFood.x - x) < 1.5 &&
+                    Math.abs(burnedFood.y - y) < 1.5) {
+
+                IO.println("Chef", "Discarding burned " + burnedFood.affectedItem);
+                logToUI("Discarded burned food: " + burnedFood.affectedItem);
+                restaurant.resolveCondition(burnedFood);
+
+                try {
+                    Thread.sleep(1000); // 1 second to discard
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
     private class OrderHandlingBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
+            // First priority: Check for fires near cooking/cutting stations
+            if (checkAndHandleFires()) {
+                return; // Handle fire first, then continue to orders next cycle
+            }
+
             // Receive orders via ACL messages
             ACLMessage msg = receive();
             if (msg != null) {
@@ -134,16 +209,16 @@ public class Chef extends Agent {
                             // Validate this order exists in shared state
                             String queuedOrder = restaurant.getNextOrder();
                             if (queuedOrder != null && queuedOrder.equalsIgnoreCase(meal)) {
-                                IO.println("Chef", "[VALIDATION] ✓ Order '" + meal +
+                                IO.println("Chef", "[VALIDATION] Order '" + meal +
                                         "' matches queued order '" + queuedOrder + "'");
                                 processMeal(meal);
                             } else if (queuedOrder != null) {
-                                IO.println("Chef", "[VALIDATION] ⚠ WARNING - Message order '" + meal +
+                                IO.println("Chef", "[VALIDATION] WARNING - Message order '" + meal +
                                         "' doesn't match queued order '" + queuedOrder + "'");
                                 // Process anyway but log discrepancy
                                 processMeal(meal);
                             } else {
-                                IO.println("Chef", "[VALIDATION] ⚠ WARNING - No queued order found for '" +
+                                IO.println("Chef", "[VALIDATION] WARNING - No queued order found for '" +
                                         meal + "' but processing from message");
                                 processMeal(meal);
                             }
@@ -241,6 +316,9 @@ public class Chef extends Agent {
         // Move to cooking station
         goTo(ChefState.COOKING);
 
+        // Check for and discard any burned food at this station first
+        checkAndDiscardBurnedFood(2.0, 2.0);
+
         Integer cookTime = chefKnowledge.getCookingTime(ingredient);
         String method = chefKnowledge.getCookingMethod(ingredient);
 
@@ -251,9 +329,23 @@ public class Chef extends Agent {
             gameWindow.getGameState().updateAgentStatus("chef", "Cooking " + ingredient);
         }
 
-        // Simulate cooking time
+        // Simulate cooking time with chance to burn (10% chance)
         try {
             Thread.sleep(cookTime * 1000); // Convert to milliseconds
+
+            // Check if food burned (random chance)
+            if (Math.random() < 0.10) { // 10% chance to burn
+                IO.println("Chef", "WARNING - " + ingredient + " has BURNED!");
+                logToUI("Food burned: " + ingredient);
+
+                // Add burned food condition at cooking station
+                if (gameWindow != null) {
+                    gameWindow.getGameState().addBurnedFood(2.0, 2.0, ingredient);
+                    gameWindow.getGameState().updateAgentStatus("chef", "Burned " + ingredient + "!");
+                }
+
+                return false; // Cooking failed due to burning
+            }
         } catch (InterruptedException e) {
             IO.println("Chef", "ERROR - Cooking interrupted for " + ingredient);
             Thread.currentThread().interrupt(); // Restore interrupted status
