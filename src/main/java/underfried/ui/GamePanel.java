@@ -174,9 +174,12 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     private void drawOverlay(Graphics2D g2d) {
-        // Draw status information at the top
+        // Draw status information at the bottom (footer)
+        int footerHeight = 30;
+        int footerY = (GRID_HEIGHT * TILE_SIZE) - footerHeight;
+
         g2d.setColor(new Color(0, 0, 0, 150));
-        g2d.fillRect(0, 0, GRID_WIDTH * TILE_SIZE, 30);
+        g2d.fillRect(0, footerY, GRID_WIDTH * TILE_SIZE, footerHeight);
 
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Arial", Font.BOLD, 12));
@@ -188,9 +191,10 @@ public class GamePanel extends JPanel implements ActionListener {
                 gameState.getRestaurant().getPendingOrderCount(),
                 gameState.getRestaurant().getReadyDishCount());
 
-        g2d.drawString(status, 10, 20);
+        g2d.drawString(status, 10, footerY + 20);
 
-        // Display environmental conditions warnings if any
+        // Display environmental conditions warnings if any (above the footer, at the
+        // top)
         int fires = gameState.getRestaurant().getConditionCount(underfried.Restaurant.EnvironmentalCondition.FIRE);
         int rats = gameState.getRestaurant().getConditionCount(underfried.Restaurant.EnvironmentalCondition.RAT);
         int burned = gameState.getRestaurant()
@@ -206,7 +210,14 @@ public class GamePanel extends JPanel implements ActionListener {
                 warnings += "Rat x" + rats + " ";
             if (burned > 0)
                 warnings += "Burned x" + burned + " ";
-            g2d.drawString(warnings, 10, GRID_HEIGHT * TILE_SIZE - 10);
+
+            // Draw alerts at the top of the screen with a semi-transparent background
+            int alertWidth = g2d.getFontMetrics().stringWidth(warnings) + 20;
+            g2d.setColor(new Color(255, 0, 0, 100));
+            g2d.fillRect(5, 5, alertWidth, 20);
+
+            g2d.setColor(Color.RED);
+            g2d.drawString(warnings, 10, 20);
         }
 
         // Draw station labels
