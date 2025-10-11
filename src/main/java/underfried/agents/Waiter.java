@@ -214,31 +214,28 @@ public class Waiter extends Agent {
         }
     }
 
-    private void wait(int milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-        }
-    }
-
     protected void goTo(WaiterState destination) {
         if (currentState == destination)
             return;
 
+        double targetX = 0, targetY = 0;
         // Update UI with movement BEFORE changing state
         if (gameWindow != null) {
             if (destination == WaiterState.KITCHEN) {
-                gameWindow.getGameState().moveAgent("waiter", 9.5, 7.0);
+                targetX = 9.5;
+                targetY = 7.0;
                 gameWindow.getGameState().updateAgentStatus("waiter", "Going to kitchen");
             } else {
                 // Move to center of dining area
-                gameWindow.getGameState().moveAgent("waiter", 15.0, 7.0);
+                targetX = 15.0;
+                targetY = 7.0;
                 gameWindow.getGameState().updateAgentStatus("waiter", "Going to dining area");
             }
+
+            gameWindow.getGameState().moveAgent("waiter", targetX, targetY);
+            gameWindow.waitUntilArrived("waiter", targetX, targetY);
         }
 
-        // Wait for movement animation, then update state
-        wait(3000); // Wait for animation to complete
         currentState = destination;
     }
 
@@ -251,7 +248,7 @@ public class Waiter extends Agent {
 
         for (int i = 0; i < 3; i++) {
             if (Math.random() < 0.3) {
-                wait(1000);
+                gameWindow.wait(1000);
                 ordersTaken++;
                 IO.println(getAID().getName() + ": I got an order.");
             }
@@ -267,7 +264,7 @@ public class Waiter extends Agent {
 
         while (attemptsMade < maxAttempts && restaurant.takenPlates > 0) {
             if (Math.random() < 0.3) {
-                wait(1000);
+                gameWindow.wait(1000);
                 IO.println(getAID().getName() + ": I took an empty plate.");
                 emptyPlatesTaken++;
                 restaurant.takenPlates--; // Decrement taken plates immediately
@@ -284,7 +281,7 @@ public class Waiter extends Agent {
         }
 
         for (String meal : mealsToDeliver) {
-            wait(1000);
+            gameWindow.wait(1000);
             IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
             logToUI("Delivered " + meal + " to table");
             // When a meal is delivered, the customer now has a plate
