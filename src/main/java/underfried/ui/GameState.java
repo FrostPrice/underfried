@@ -24,8 +24,8 @@ public class GameState {
     // Predefined positions for agents and stations
     private static final double CHEF_START_X = 2.5;
     private static final double CHEF_START_Y = 2.5;
-    private static final double WAITER_START_X = 12.5;
-    private static final double WAITER_START_Y = 7.5;
+    private static final double WAITER_START_X = 9.5;
+    private static final double WAITER_START_Y = 7.0;
     private static final double DISH_PREPARER_START_X = 7.5;
     private static final double DISH_PREPARER_START_Y = 2.5;
     private static final double DISH_WASHER_START_X = 7.5;
@@ -122,25 +122,6 @@ public class GameState {
         } else {
             if (chef != null) {
                 chef.setStatus("Waiting");
-            }
-        }
-
-        // Waiter behavior - move between dining area and counter
-        AgentSprite waiter = agentMap.get("waiter");
-        if (waiter != null) {
-            if (!waiter.isMoving()) {
-                if (restaurant.getReadyDishCount() > 0) {
-                    // Pick up dishes from counter
-                    waiter.setTargetPosition(9.5, 7.5);
-                    waiter.setStatus("Picking up");
-                } else {
-                    // Take orders from random table
-                    int tableIndex = random.nextInt(12);
-                    double tableX = 12.5 + (tableIndex % 3) * 3;
-                    double tableY = 2.5 + (tableIndex / 3) * 3;
-                    waiter.setTargetPosition(tableX, tableY);
-                    waiter.setStatus("Taking order");
-                }
             }
         }
 

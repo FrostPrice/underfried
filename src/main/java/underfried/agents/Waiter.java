@@ -163,12 +163,30 @@ public class Waiter extends Agent {
     protected void goTo(WaiterState destination) {
         if (currentState == destination)
             return;
-        wait(3000);
+
+        // Update UI with movement BEFORE changing state
+        if (gameWindow != null) {
+            if (destination == WaiterState.KITCHEN) {
+                gameWindow.getGameState().moveAgent("waiter", 9.5, 7.0);
+                gameWindow.getGameState().updateAgentStatus("waiter", "Going to kitchen");
+            } else {
+                // Move to center of dining area
+                gameWindow.getGameState().moveAgent("waiter", 15.0, 7.0);
+                gameWindow.getGameState().updateAgentStatus("waiter", "Going to dining area");
+            }
+        }
+
+        // Wait for movement animation, then update state
+        wait(3000); // Wait for animation to complete
         currentState = destination;
     }
 
     protected void takeOrders() {
         goTo(WaiterState.DINING_AREA);
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("waiter", "Taking orders");
+        }
 
         for (int i = 0; i < 3; i++) {
             if (Math.random() < 0.3) {
@@ -199,6 +217,10 @@ public class Waiter extends Agent {
 
     protected void deliverMeals(List<String> mealsToDeliver) {
         goTo(WaiterState.DINING_AREA);
+
+        if (gameWindow != null) {
+            gameWindow.getGameState().updateAgentStatus("waiter", "Delivering meals");
+        }
 
         for (String meal : mealsToDeliver) {
             wait(1000);
