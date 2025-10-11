@@ -4,13 +4,62 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Restaurant {
     public Restaurant(String name) {
         this.restaurantName = name;
         this.menu = new HashMap<>();
+        this.activeConditions = new ArrayList<>();
         initializeMenu();
     }
+
+    // Environmental condition tracking
+    public enum EnvironmentalCondition {
+        FIRE("Fire", "🔥"),
+        BURNED_FOOD("Burned Food", "🔥"),
+        RAT("Rat", "🐀");
+
+        private final String displayName;
+        private final String icon;
+
+        EnvironmentalCondition(String displayName, String icon) {
+            this.displayName = displayName;
+            this.icon = icon;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+    }
+
+    public static class ActiveCondition {
+        public EnvironmentalCondition type;
+        public double x, y; // Position in tile coordinates
+        public long startTime;
+        public String affectedItem; // For burned food, the dish name
+        public boolean resolved;
+
+        public ActiveCondition(EnvironmentalCondition type, double x, double y) {
+            this.type = type;
+            this.x = x;
+            this.y = y;
+            this.startTime = System.currentTimeMillis();
+            this.resolved = false;
+        }
+
+        public ActiveCondition(EnvironmentalCondition type, double x, double y, String affectedItem) {
+            this(type, x, y);
+            this.affectedItem = affectedItem;
+        }
+    }
+
+    public List<ActiveCondition> activeConditions;
 
     public int cleanPlates = 10;
     public int takenPlates = 10;
@@ -181,5 +230,91 @@ public class Restaurant {
      */
     public int getReadyDishCount() {
         return readyDishes.size();
+    }
+
+    // ==================== Environmental Condition Management ====================
+
+    /**
+     * Add a new environmental condition (fire, rat, etc.)
+     * 
+     * @param condition the type of condition to add
+     * @param x         the x position in tile coordinates
+     * @param y         the y position in tile coordinates
+     * @return the created ActiveCondition
+     */
+    public ActiveCondition addCondition(EnvironmentalCondition condition, double x, double y) {
+        ActiveCondition newCondition = new ActiveCondition(condition, x, y);
+        activeConditions.add(newCondition);
+        return newCondition;
+    }
+
+    /**
+     * Add a burned food condition with the affected dish
+     * 
+     * @param x        the x position in tile coordinates
+     * @param y        the y position in tile coordinates
+     * @param dishName the name of the burned dish
+     * @return the created ActiveCondition
+     */
+    public ActiveCondition addBurnedFood(double x, double y, String dishName) {
+        ActiveCondition newCondition = new ActiveCondition(EnvironmentalCondition.BURNED_FOOD, x, y, dishName);
+        activeConditions.add(newCondition);
+        return newCondition;
+    }
+
+    /**
+     * Resolve/remove a condition (e.g., fire extinguished, rat caught)
+     * 
+     * @param condition the condition to resolve
+     */
+    public void resolveCondition(ActiveCondition condition) {
+        condition.resolved = true;
+    }
+
+    /**
+     * Remove all resolved conditions from the active list
+     */
+    public void cleanupResolvedConditions() {
+        activeConditions.removeIf(c -> c.resolved);
+    }
+
+    /**
+     * Get all active conditions of a specific type
+     * 
+     * @param type the type of condition to search for
+     * @return list of matching active conditions
+     */
+    public List<ActiveCondition> getConditionsByType(EnvironmentalCondition type) {
+        List<ActiveCondition> result = new ArrayList<>();
+        for (ActiveCondition condition : activeConditions) {
+            if (condition.type == type && !condition.resolved) {
+                result.add(condition);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Check if there are any unresolved conditions
+     * 
+     * @return true if there are active unresolved conditions
+     */
+    public boolean hasActiveConditions() {
+        for (ActiveCondition condition : activeConditions) {
+            if (!condition.resolved) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get count of active conditions of a specific type
+     * 
+     * @param type the type of condition to count
+     * @return number of active conditions of that type
+     */
+    public int getConditionCount(EnvironmentalCondition type) {
+        return getConditionsByType(type).size();
     }
 }
