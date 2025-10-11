@@ -26,8 +26,8 @@ public class GameState {
     private long lastRatCheck;
     private static final long FIRE_CHECK_INTERVAL = 30000; // Check every 30 seconds
     private static final long RAT_CHECK_INTERVAL = 45000; // Check every 45 seconds
-    private static final double FIRE_PROBABILITY = 0.90; // 15% chance
-    private static final double RAT_PROBABILITY = 0.90; // 20% chance
+    private static final double FIRE_PROBABILITY = 0.15; // 15% chance
+    private static final double RAT_PROBABILITY = 0.20; // 20% chance
 
     // Predefined positions for agents and stations
     private static final double CHEF_START_X = 2.5;
