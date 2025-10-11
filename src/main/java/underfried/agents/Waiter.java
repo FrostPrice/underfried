@@ -5,10 +5,9 @@ import java.util.List;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import underfried.Restaurant;
+import underfried.behaviors.ConditionalTickerBehavior;
 
 enum WaiterState {
     KITCHEN,
@@ -19,82 +18,105 @@ public class Waiter extends Agent {
     private Restaurant restaurant = null;
     private WaiterState currentState = WaiterState.KITCHEN;
 
+    private boolean isBusy = false;
+
     private int ordersTaken = 0;
     private int emptyPlatesTaken = 0;
-
-    private List<String> mealsToDeliver = new ArrayList<>();
 
     protected void setup() {
         restaurant = (Restaurant) getArguments()[0];
 
-        addBehaviour(new TickerBehaviour(this, 3000) {
-            public void onTick() {
-                IO.println(getAID().getName() + ": I'll take a look at the tables.");
+        addBehaviour(new PeekDiningAreaBehavior(this, 10000));
+        addBehaviour(new PeekReadyDishesBehavior(this, 5000));
+    }
 
-                takeOrders();
-                takeEmptyPlates();
+    private class PeekDiningAreaBehavior extends ConditionalTickerBehavior {
+        public PeekDiningAreaBehavior(Agent a, long timeout) {
+            super(a, timeout);
+        }
 
-                goTo(WaiterState.KITCHEN);
-                IO.println(getAID().getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
-                        + " empty plates.");
+        protected boolean testCondition() {
+            return !isBusy;
+        }
 
-                restaurant.dirtyPlates += emptyPlatesTaken;
+        protected void execute() {
+            IO.println(getAID().getName() + ": I'll take a look at the tables.");
 
-                if (ordersTaken > 0) {
-                    String orders = "";
-                    String[] availableDishes = restaurant.getAvailableDishes().toArray(new String[0]);
+            isBusy = true;
+            takeOrders();
+            takeEmptyPlates();
 
-                    for (int i = 0; i < ordersTaken; i++) {
-                        int dishIndex = (int) (Math.random() * availableDishes.length);
-                        String dishOrdered = availableDishes[dishIndex];
-                        orders += dishOrdered + "\n";
-                        IO.println(getAID().getName() + ": Order of a " + dishOrdered + " to the chef.");
-                    }
+            goTo(WaiterState.KITCHEN);
+            IO.println(getAID().getName() + ": I'm back with " + ordersTaken + " orders and " + emptyPlatesTaken
+                    + " empty plates.");
 
-                    ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
-                    AID chefAID = new AID("chef", AID.ISLOCALNAME);
-                    notification.addReceiver(chefAID);
+            restaurant.dirtyPlates += emptyPlatesTaken;
 
-                    notification.setContent(orders.trim());
-                    send(notification);
+            if (ordersTaken > 0) {
+                String orders = "";
+                String[] availableDishes = restaurant.getAvailableDishes().toArray(new String[0]);
 
-                    ordersTaken = 0;
+                for (int i = 0; i < ordersTaken; i++) {
+                    int dishIndex = (int) (Math.random() * availableDishes.length);
+                    String dishOrdered = availableDishes[dishIndex];
+                    orders += dishOrdered + "\n";
+                    IO.println(getAID().getName() + ": Order of a " + dishOrdered + " to the chef.");
                 }
 
-                // Notify the dishwasher about dirty plates
-                if (emptyPlatesTaken > 0) {
-                    ACLMessage dirtyPlatesNotification = new ACLMessage(ACLMessage.INFORM);
-                    AID dishWasherAID = new AID("dishWasher", AID.ISLOCALNAME);
-                    dirtyPlatesNotification.addReceiver(dishWasherAID);
-                    dirtyPlatesNotification.setContent("DIRTY_PLATES:" + emptyPlatesTaken);
-                    send(dirtyPlatesNotification);
+                ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
+                AID chefAID = new AID("chef", AID.ISLOCALNAME);
+                notification.addReceiver(chefAID);
 
-                    IO.println(
-                            getAID().getName() + ": Notified dishwasher about " + emptyPlatesTaken + " dirty plates.");
-                    emptyPlatesTaken = 0;
-                }
+                notification.setContent(orders.trim());
+                send(notification);
+
+                ordersTaken = 0;
             }
-        });
 
-        addBehaviour(new CyclicBehaviour(this) {
-            public void action() {
-                if (currentState == WaiterState.KITCHEN) {
-                    int mealsToTake = Math.min(2, restaurant.readyDishes.size());
+            // Notify the dishwasher about dirty plates
+            if (emptyPlatesTaken > 0) {
+                ACLMessage dirtyPlatesNotification = new ACLMessage(ACLMessage.INFORM);
+                AID dishWasherAID = new AID("dishWasher", AID.ISLOCALNAME);
+                dirtyPlatesNotification.addReceiver(dishWasherAID);
+                dirtyPlatesNotification.setContent("DIRTY_PLATES:" + emptyPlatesTaken);
+                send(dirtyPlatesNotification);
 
-                    for (int i = 0; i < mealsToTake; i++) {
-                        String doneDish = restaurant.readyDishes.poll();
-                        mealsToDeliver.add(doneDish);
-                        IO.println(getAID().getName() + ": I've picked up the dish " + doneDish + " from the kitchen.");
-                    }
-
-                    deliverMeals();
-
-                    goTo(WaiterState.KITCHEN);
-                } else {
-                    block();
-                }
+                IO.println(
+                        getAID().getName() + ": Notified dishwasher about " + emptyPlatesTaken + " dirty plates.");
+                emptyPlatesTaken = 0;
             }
-        });
+
+            isBusy = false;
+        }
+    }
+
+    private class PeekReadyDishesBehavior extends ConditionalTickerBehavior {
+        public PeekReadyDishesBehavior(Agent a, long timeout) {
+            super(a, timeout);
+        }
+
+        protected boolean testCondition() {
+            return !isBusy;
+        }
+
+        protected void execute() {
+            goTo(WaiterState.KITCHEN);
+
+            int readyDishesCount = restaurant.readyDishes.size();
+
+            if (readyDishesCount > 0) {
+                int mealsToTake = Math.min(2, readyDishesCount);
+                List<String> mealsToDeliver = new ArrayList<>();
+
+                for (int i = 0; i < mealsToTake; i++) {
+                    String doneDish = restaurant.readyDishes.poll();
+                    mealsToDeliver.add(doneDish);
+                    IO.println(getAID().getName() + ": I've picked up the dish " + doneDish + " from the kitchen.");
+                }
+
+                deliverMeals(mealsToDeliver);
+            }
+        }
     }
 
     private void wait(int milliseconds) {
@@ -135,12 +157,12 @@ public class Waiter extends Agent {
         }
     }
 
+    protected void deliverMeals(List<String> mealsToDeliver) {
         goTo(WaiterState.DINING_AREA);
 
         for (String meal : mealsToDeliver) {
             wait(1000);
             IO.println(getAID().getName() + ": Delivering the dish " + meal + " to a table.");
         }
-        mealsToDeliver.clear();
     }
 }
