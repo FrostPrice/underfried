@@ -6,6 +6,7 @@ import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import underfried.Restaurant;
 import underfried.ui.GameWindow;
+import underfried.IO;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,15 +33,15 @@ public class DishPreparer extends Agent {
             throw new IllegalArgumentException("DishPreparer agent missing required arguments: Restaurant instance");
         }
 
-        System.out.println("DishPreparer Agent " + getAID().getName() + " is ready to prepare dishes!");
+        IO.println("DishPreparer", "Agent " + getAID().getName() + " is ready to prepare dishes!");
         logToUI("DishPreparer ready to assemble dishes!");
 
         // Initialize state
         readyIngredients = new HashMap<>();
 
-        System.out.println("DishPreparer: Initialized with restaurant menu (" +
+        IO.println("DishPreparer", "Initialized with restaurant menu (" +
                 restaurant.getMenuSize() + " dishes)");
-        System.out.println("DishPreparer: Using restaurant plate management - Clean plates available: " +
+        IO.println("DishPreparer", "Using restaurant plate management - Clean plates available: " +
                 restaurant.cleanPlates);
 
         // Add behavior to handle incoming messages
@@ -55,8 +56,8 @@ public class DishPreparer extends Agent {
 
     @Override
     protected void takeDown() {
-        System.out.println("DishPreparer Agent " + getAID().getName() + " is finishing work.");
-        System.out.println("DishPreparer: Final stats - Ready dishes: " + restaurant.readyDishes.size() +
+        IO.println("DishPreparer", "Agent " + getAID().getName() + " is finishing work.");
+        IO.println("DishPreparer", "Final stats - Ready dishes: " + restaurant.readyDishes.size() +
                 " (" + restaurant.readyDishes + "), Clean plates: " + restaurant.cleanPlates);
     }
 
@@ -66,12 +67,12 @@ public class DishPreparer extends Agent {
             ACLMessage msg = receive();
             if (msg != null) {
                 String content = msg.getContent();
-                System.out.println("DishPreparer received message: " + content);
+                IO.println("DishPreparer", "Received message: " + content);
 
                 if (content != null && !content.trim().isEmpty()) {
                     processMessage(content, msg.getSender());
                 } else {
-                    System.out.println("DishPreparer received empty message from " + msg.getSender().getName());
+                    IO.println("DishPreparer", "Received empty message from " + msg.getSender().getName());
                 }
             } else {
                 block();

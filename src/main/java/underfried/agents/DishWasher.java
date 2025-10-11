@@ -6,6 +6,7 @@ import jade.lang.acl.ACLMessage;
 import jade.core.AID;
 import underfried.Restaurant;
 import underfried.ui.GameWindow;
+import underfried.IO;
 
 public class DishWasher extends Agent {
     private Restaurant restaurant;
@@ -25,10 +26,10 @@ public class DishWasher extends Agent {
             throw new IllegalArgumentException("DishWasher agent missing required arguments: Restaurant instance");
         }
 
-        System.out.println("DishWasher Agent " + getAID().getName() + " is ready to wash dishes!");
-        System.out.println("DishWasher: Washing capacity: " + washingCapacity + " plates at once");
-        System.out.println("DishWasher: Washing time: " + (washingTimePerPlate / 1000) + " seconds per plate");
-        System.out.println("DishWasher: Current dirty plates in restaurant: " + restaurant.dirtyPlates);
+        IO.println("DishWasher", "Agent " + getAID().getName() + " is ready to wash dishes!");
+        IO.println("DishWasher", "Washing capacity: " + washingCapacity + " plates at once");
+        IO.println("DishWasher", "Washing time: " + (washingTimePerPlate / 1000) + " seconds per plate");
+        IO.println("DishWasher", "Current dirty plates in restaurant: " + restaurant.dirtyPlates);
         logToUI("DishWasher ready to clean plates!");
 
         addBehaviour(new DishWashingBehaviour());
@@ -42,8 +43,8 @@ public class DishWasher extends Agent {
 
     @Override
     protected void takeDown() {
-        System.out.println("DishWasher Agent " + getAID().getName() + " is finishing work.");
-        System.out.println("DishWasher: Final stats - Dirty plates remaining: " + restaurant.dirtyPlates +
+        IO.println("DishWasher", "Agent " + getAID().getName() + " is finishing work.");
+        IO.println("DishWasher", "Final stats - Dirty plates remaining: " + restaurant.dirtyPlates +
                 ", Clean plates available: " + restaurant.cleanPlates);
     }
 
@@ -54,12 +55,12 @@ public class DishWasher extends Agent {
             ACLMessage msg = receive();
             if (msg != null) {
                 String content = msg.getContent();
-                System.out.println("DishWasher received message: " + content);
+                IO.println("DishWasher", "Received message: " + content);
 
                 if (content != null && !content.trim().isEmpty()) {
                     processMessage(content, msg.getSender());
                 } else {
-                    System.out.println("DishWasher received empty message from " + msg.getSender().getName());
+                    IO.println("DishWasher", "Received empty message from " + msg.getSender().getName());
                 }
             }
 

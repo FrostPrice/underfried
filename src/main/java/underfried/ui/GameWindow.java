@@ -14,10 +14,16 @@ public class GameWindow extends JFrame {
     private JPanel controlPanel;
     private JTextArea logArea;
     private JScrollPane logScrollPane;
+    private JPanel logFilterPanel;
+
+    // Log filtering
+    private JCheckBox showChef, showWaiter, showDishPreparer, showDishWasher, showSystem;
+    private java.util.List<String> allLogs;
 
     public GameWindow(Restaurant restaurant) {
         this.restaurant = restaurant;
         this.gameState = new GameState(restaurant);
+        this.allLogs = new java.util.ArrayList<>();
 
         initializeUI();
     }
@@ -35,9 +41,14 @@ public class GameWindow extends JFrame {
         createControlPanel();
         add(controlPanel, BorderLayout.SOUTH);
 
-        // Create side panel with log
+        // Create side panel with log and filters
         createSidePanel();
-        add(logScrollPane, BorderLayout.EAST);
+
+        // Create main log panel with filters
+        JPanel logMainPanel = new JPanel(new BorderLayout());
+        logMainPanel.add(createLogFilterPanel(), BorderLayout.NORTH);
+        logMainPanel.add(logScrollPane, BorderLayout.CENTER);
+        add(logMainPanel, BorderLayout.EAST);
 
         pack();
         setLocationRelativeTo(null);
@@ -92,8 +103,66 @@ public class GameWindow extends JFrame {
         logArea.append("Agents initialized.\n");
         logArea.append("\n");
 
+        // Add initial logs to the list
+        allLogs.add("=== Restaurant Activity Log ===");
+        allLogs.add("System started...");
+        allLogs.add("Agents initialized.");
+        allLogs.add("");
+
         logScrollPane = new JScrollPane(logArea);
         logScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+    }
+
+    private JPanel createLogFilterPanel() {
+        logFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        logFilterPanel.setBackground(new Color(50, 50, 50));
+        logFilterPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY),
+                "Log Filters",
+                0, 0,
+                new Font("Arial", Font.BOLD, 10),
+                Color.WHITE));
+
+        // Create checkboxes for each agent type
+        showSystem = new JCheckBox("System", true);
+        showChef = new JCheckBox("Chef", true);
+        showWaiter = new JCheckBox("Waiter", true);
+        showDishPreparer = new JCheckBox("DishPreparer", true);
+        showDishWasher = new JCheckBox("DishWasher", true);
+
+        // Style checkboxes
+        JCheckBox[] checkboxes = { showSystem, showChef, showWaiter, showDishPreparer, showDishWasher };
+        for (JCheckBox cb : checkboxes) {
+            cb.setBackground(new Color(50, 50, 50));
+            cb.setForeground(Color.WHITE);
+            cb.setFont(new Font("Arial", Font.PLAIN, 9));
+            cb.addActionListener(_ -> updateLogDisplay());
+            logFilterPanel.add(cb);
+        }
+
+        // Add "All" and "None" buttons
+        JButton allButton = new JButton("All");
+        allButton.setFont(new Font("Arial", Font.PLAIN, 9));
+        allButton.addActionListener(_ -> {
+            for (JCheckBox cb : checkboxes) {
+                cb.setSelected(true);
+            }
+            updateLogDisplay();
+        });
+
+        JButton noneButton = new JButton("None");
+        noneButton.setFont(new Font("Arial", Font.PLAIN, 9));
+        noneButton.addActionListener(_ -> {
+            for (JCheckBox cb : checkboxes) {
+                cb.setSelected(false);
+            }
+            updateLogDisplay();
+        });
+
+        logFilterPanel.add(allButton);
+        logFilterPanel.add(noneButton);
+
+        return logFilterPanel;
     }
 
     private void showMenu() {
@@ -182,9 +251,43 @@ public class GameWindow extends JFrame {
 
     public void appendLog(String message) {
         SwingUtilities.invokeLater(() -> {
-            logArea.append(message + "\n");
-            logArea.setCaretPosition(logArea.getDocument().getLength());
+            // Add to the full log list
+            allLogs.add(message);
+
+            // Update display based on current filters
+            updateLogDisplay();
         });
+    }
+
+    private void updateLogDisplay() {
+        StringBuilder filteredLog = new StringBuilder();
+
+        for (String log : allLogs) {
+            if (shouldShowLog(log)) {
+                filteredLog.append(log).append("\n");
+            }
+        }
+
+        logArea.setText(filteredLog.toString());
+        logArea.setCaretPosition(logArea.getDocument().getLength());
+    }
+
+    private boolean shouldShowLog(String log) {
+        if (log.startsWith("[System]") || log.equals("=== Restaurant Activity Log ===") ||
+                log.equals("System started...") || log.equals("Agents initialized...") || log.isEmpty()) {
+            return showSystem.isSelected();
+        } else if (log.startsWith("[Chef]") || log.contains("Chef")) {
+            return showChef.isSelected();
+        } else if (log.startsWith("[Waiter]") || log.contains("Waiter")) {
+            return showWaiter.isSelected();
+        } else if (log.startsWith("[DishPreparer]") || log.contains("DishPreparer")) {
+            return showDishPreparer.isSelected();
+        } else if (log.startsWith("[DishWasher]") || log.contains("DishWasher")) {
+            return showDishWasher.isSelected();
+        } else {
+            // Default to System for unrecognized logs
+            return showSystem.isSelected();
+        }
     }
 
     public GameState getGameState() {

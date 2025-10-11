@@ -9,6 +9,7 @@ import jade.lang.acl.ACLMessage;
 import underfried.Restaurant;
 import underfried.ui.GameWindow;
 import underfried.behaviors.ConditionalTickerBehavior;
+import underfried.IO;
 
 enum WaiterState {
     KITCHEN,

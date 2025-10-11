@@ -7,6 +7,7 @@ import jade.core.AID;
 import underfried.Restaurant;
 import underfried.ChefKnowledge;
 import underfried.ui.GameWindow;
+import underfried.IO;
 
 public class Chef extends Agent {
     private Restaurant restaurant;
@@ -25,15 +26,15 @@ public class Chef extends Agent {
             throw new IllegalArgumentException("Chef agent missing required arguments: Restaurant instance");
         }
 
-        System.out.println("Chef Agent " + getAID().getName() + " is ready to cook!");
+        IO.println("Chef", "Agent " + getAID().getName() + " is ready to cook!");
         logToUI("Chef ready to cook!");
 
         // Initialize chef knowledge
         chefKnowledge = new ChefKnowledge(getAID().getLocalName());
 
-        System.out.println("Chef: Initialized with restaurant menu (" +
+        IO.println("Chef", "Initialized with restaurant menu (" +
                 restaurant.getMenuSize() + " dishes)");
-        System.out.println("Chef: Ready with cooking knowledge for " +
+        IO.println("Chef", "Ready with cooking knowledge for " +
                 chefKnowledge.getCookableIngredients().size()
                 + " ingredients");
 
@@ -49,7 +50,7 @@ public class Chef extends Agent {
 
     @Override
     protected void takeDown() {
-        System.out.println("Chef Agent " + getAID().getName() + " is finishing work.");
+        IO.println("Chef", "Agent " + getAID().getName() + " is finishing work.");
     }
 
     private class OrderHandlingBehaviour extends CyclicBehaviour {
@@ -58,19 +59,19 @@ public class Chef extends Agent {
             // Receive orders via ACL messages
             ACLMessage msg = receive();
             if (msg != null) {
-                System.out.println("Chef received order: " + msg.getContent());
+                IO.println("Chef", "Received order: " + msg.getContent());
 
                 // Parse the order content
                 String orderContent = msg.getContent();
                 if (orderContent != null && !orderContent.trim().isEmpty()) {
                     // Validate against shared state
                     int expectedOrders = restaurant.getPendingOrderCount();
-                    System.out.println("Chef: [VALIDATION] Pending orders in queue: " + expectedOrders);
+                    IO.println("Chef", "[VALIDATION] Pending orders in queue: " + expectedOrders);
 
                     // Process orders from message
                     // Parse order format: "PLATE1\nPLATE2\n..." where each meal is on a new line
                     String[] meals = orderContent.split("\n");
-                    System.out.println("Chef: Processing " + meals.length + " order(s) from message");
+                    IO.println("Chef", "Processing " + meals.length + " order(s) from message");
 
                     // Process each meal in the order
                     for (String meal : meals) {
@@ -79,26 +80,26 @@ public class Chef extends Agent {
                             // Validate this order exists in shared state
                             String queuedOrder = restaurant.getNextOrder();
                             if (queuedOrder != null && queuedOrder.equalsIgnoreCase(meal)) {
-                                System.out.println("Chef: [VALIDATION] ✓ Order '" + meal +
+                                IO.println("Chef", "[VALIDATION] ✓ Order '" + meal +
                                         "' matches queued order '" + queuedOrder + "'");
                                 processMeal(meal);
                             } else if (queuedOrder != null) {
-                                System.out.println("Chef: [VALIDATION] ⚠ WARNING - Message order '" + meal +
+                                IO.println("Chef", "[VALIDATION] ⚠ WARNING - Message order '" + meal +
                                         "' doesn't match queued order '" + queuedOrder + "'");
                                 // Process anyway but log discrepancy
                                 processMeal(meal);
                             } else {
-                                System.out.println("Chef: [VALIDATION] ⚠ WARNING - No queued order found for '" +
+                                IO.println("Chef", "[VALIDATION] ⚠ WARNING - No queued order found for '" +
                                         meal + "' but processing from message");
                                 processMeal(meal);
                             }
                         }
                     }
 
-                    System.out.println("Chef: [VALIDATION] Remaining orders in queue: " +
+                    IO.println("Chef", "[VALIDATION] Remaining orders in queue: " +
                             restaurant.getPendingOrderCount());
                 } else {
-                    System.out.println("Chef: ERROR - Received empty order message");
+                    IO.println("Chef", "ERROR - Received empty order message");
                 }
             } else {
                 block();
@@ -107,7 +108,7 @@ public class Chef extends Agent {
     }
 
     private void processMeal(String mealName) {
-        System.out.println("Chef: Starting to prepare ingredients for meal: " + mealName);
+        IO.println("Chef", "Starting to prepare ingredients for meal: " + mealName);
         logToUI("Processing order: " + mealName);
 
         if (gameWindow != null) {
@@ -117,8 +118,8 @@ public class Chef extends Agent {
         // Get the recipe from the restaurant menu
         String[] ingredients = restaurant.getRecipe(mealName);
         if (ingredients == null) {
-            System.out.println("Chef: ERROR - Unknown meal: " + mealName);
-            System.out.println("Chef: Available meals: " + restaurant.getAvailableDishes());
+            IO.println("Chef", "ERROR - Unknown meal: " + mealName);
+            IO.println("Chef", "Available meals: " + restaurant.getAvailableDishes());
             logToUI("ERROR: Unknown meal - " + mealName);
             return;
         }
@@ -129,7 +130,7 @@ public class Chef extends Agent {
             processIngredient(ingredient, mealName);
         }
 
-        System.out.println("Chef: Finished processing all ingredients for meal: " + mealName);
+        IO.println("Chef", "Finished processing all ingredients for meal: " + mealName);
         logToUI("Completed: " + mealName);
     }
 

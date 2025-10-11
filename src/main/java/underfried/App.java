@@ -20,6 +20,8 @@ public class App {
         // Initialize the game UI on the Swing Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
             gameWindow = new GameWindow(restaurant);
+            // Set the IO class to use this game window for logging
+            IO.setGameWindow(gameWindow);
             gameWindow.appendLog("Restaurant opened!");
             gameWindow.appendLog("Initializing JADE agents...");
         });
