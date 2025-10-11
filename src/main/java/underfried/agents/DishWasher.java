@@ -8,11 +8,19 @@ import underfried.Restaurant;
 import underfried.ui.GameWindow;
 import underfried.IO;
 
+enum DishWasherState {
+    WASHING_STATION,
+    DELIVERING_CLEAN_PLATES,
+    TAKING_DIRTY_PLATES
+}
+
 public class DishWasher extends Agent {
     private Restaurant restaurant;
     private GameWindow gameWindow;
     private int washingCapacity = 5; // Maximum plates that can be washed at once
     private int washingTimePerPlate = 2000; // 2 seconds per plate in milliseconds
+
+    private DishWasherState currentState = DishWasherState.WASHING_STATION;
 
     @Override
     protected void setup() {
@@ -78,6 +86,11 @@ public class DishWasher extends Agent {
     private void processMessage(String content, AID sender) {
         try {
             if (content.startsWith("DIRTY_PLATES:")) {
+                goTo(DishWasherState.TAKING_DIRTY_PLATES);
+
+                gameWindow.wait(1000);
+                goTo(DishWasherState.WASHING_STATION);
+
                 handleDirtyPlatesNotification(content, sender);
             } else {
                 IO.println("DishWasher", "Unknown message format: " + content);
@@ -168,6 +181,10 @@ public class DishWasher extends Agent {
     private void sendCleanPlatesToDishPreparer(int cleanPlateCount) {
         // Create message to notify dish preparer about clean plates
         ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
+        goTo(DishWasherState.DELIVERING_CLEAN_PLATES);
+
+        gameWindow.wait(1000);
+        goTo(DishWasherState.WASHING_STATION);
 
         // Set recipient (Dish Preparer agent)
         AID dishPreparerAID = new AID("dishPreparer", AID.ISLOCALNAME);
@@ -183,5 +200,43 @@ public class DishWasher extends Agent {
 
         IO.println("DishWasher", "Sent " + cleanPlateCount + " clean plates to DishPreparer");
         IO.println("DishWasher", "DishPreparer will update the restaurant's clean plate count");
+    }
+
+    protected void goTo(DishWasherState destination) {
+        if (currentState == destination)
+            return;
+
+        double targetX = 0, targetY = 0;
+
+        // Update UI with movement BEFORE changing state
+        if (gameWindow != null) {
+            switch (destination) {
+                case WASHING_STATION:
+                    targetX = 7.5;
+                    targetY = 11.5;
+                    gameWindow.getGameState().updateAgentStatus("dishWasher", "Going to washing station");
+                    break;
+                case DELIVERING_CLEAN_PLATES:
+                    targetX = 7.5;
+                    targetY = 3;
+                    gameWindow.getGameState().updateAgentStatus("dishWasher", "Delivering clean plates to preparer");
+                    break;
+                case TAKING_DIRTY_PLATES:
+                    targetX = 8;
+                    targetY = 8;
+                    gameWindow.getGameState().updateAgentStatus("dishWasher", "Taking dirty plates");
+                    break;
+            }
+
+            gameWindow.getGameState().moveAgent("dishWasher", targetX, targetY);
+
+            // Wait until agent has arrived at destination
+            gameWindow.waitUntilArrived("dishWasher", targetX, targetY);
+            gameWindow.getGameState().updateAgentStatus("dishWasher", null);
+
+        }
+
+        // Update state AFTER arriving at destination
+        currentState = destination;
     }
 }
