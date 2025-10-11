@@ -216,6 +216,7 @@ public class GamePanel extends JPanel implements ActionListener {
                 int x = (int) (station.getX() * TILE_SIZE);
                 int y = (int) (station.getY() * TILE_SIZE - 5);
                 g2d.setColor(Color.BLACK);
+                g2d.setFont(new Font("Arial", Font.PLAIN, 14));
                 g2d.drawString(station.getLabel(), x + 2, y);
             }
         }

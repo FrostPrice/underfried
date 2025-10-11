@@ -14,27 +14,21 @@ public class Station {
     private boolean occupied;
 
     public enum StationType {
-        COOKING_STATION(new Color(220, 100, 50), "🔥"),
-        CUTTING_STATION(new Color(150, 150, 150), "🔪"),
-        WASHING_STATION(new Color(100, 150, 220), "💧"),
-        PREP_STATION(new Color(180, 180, 150), "🍽️"),
-        COUNTER(new Color(139, 115, 85), ""),
-        TABLE(new Color(139, 90, 43), "🪑");
+        COOKING_STATION(new Color(220, 100, 50)),
+        CUTTING_STATION(new Color(150, 150, 150)),
+        WASHING_STATION(new Color(100, 150, 220)),
+        PREP_STATION(new Color(180, 180, 150)),
+        COUNTER(new Color(139, 115, 85)),
+        TABLE(new Color(139, 90, 43));
 
         private final Color color;
-        private final String icon;
 
-        StationType(Color color, String icon) {
+        StationType(Color color) {
             this.color = color;
-            this.icon = icon;
         }
 
         public Color getColor() {
             return color;
-        }
-
-        public String getIcon() {
-            return icon;
         }
     }
 
@@ -66,19 +60,6 @@ public class Station {
         g2d.setColor(type.getColor().darker());
         g2d.setStroke(new BasicStroke(2));
         g2d.drawRoundRect(pixelX, pixelY, pixelWidth, pixelHeight, 8, 8);
-
-        // Draw icon if available
-        if (!type.getIcon().isEmpty()) {
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, (int) (tileSize * 0.6)));
-            FontMetrics fm = g2d.getFontMetrics();
-            String icon = type.getIcon();
-            int iconWidth = fm.stringWidth(icon);
-            int iconHeight = fm.getAscent();
-            g2d.drawString(icon,
-                    pixelX + (pixelWidth - iconWidth) / 2,
-                    pixelY + (pixelHeight + iconHeight) / 2 - 2);
-        }
 
         // Draw occupied indicator
         if (occupied) {
