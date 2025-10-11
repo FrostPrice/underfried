@@ -54,10 +54,12 @@ public class AgentSprite {
         double dy = targetY - y;
         double distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 0.01) {
-            x += (dx / distance) * speed;
-            y += (dy / distance) * speed;
+        if (distance > 0.05) { // Increased threshold to prevent micro-adjustments
+            double moveAmount = Math.min(speed, distance); // Don't overshoot
+            x += (dx / distance) * moveAmount;
+            y += (dy / distance) * moveAmount;
         } else {
+            // Snap to target when very close to prevent oscillation
             x = targetX;
             y = targetY;
         }
@@ -148,6 +150,6 @@ public class AgentSprite {
     public boolean isMoving() {
         double dx = targetX - x;
         double dy = targetY - y;
-        return Math.sqrt(dx * dx + dy * dy) > 0.01;
+        return Math.sqrt(dx * dx + dy * dy) > 0.05; // Match the threshold in update()
     }
 }
