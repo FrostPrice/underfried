@@ -62,17 +62,11 @@ public class Restaurant {
     public List<ActiveCondition> activeConditions;
 
     public int cleanPlates = 10;
-    public int takenPlates = 10;
+    public int takenPlates = 0;
     public int dirtyPlates = 0;
 
     // Queue for dishes ready to be served (populated by DishPreparer)
-    public Queue<String> readyDishes = new LinkedList<>() {
-        {
-            add("steak");
-            add("pasta");
-            add("salad");
-        }
-    };
+    public Queue<String> readyDishes = new LinkedList<>();
 
     // Queue for pending orders (added by Waiter, consumed by Chef)
     public Queue<String> pendingOrders = new LinkedList<>();
