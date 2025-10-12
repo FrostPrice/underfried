@@ -35,8 +35,8 @@ public class Waiter extends Agent {
 
         logToUI("Waiter ready to serve!");
 
-        addBehaviour(new PeekDiningAreaBehavior(this, 10000));
-        addBehaviour(new PeekReadyDishesBehavior(this, 5000));
+        addBehaviour(new PeekDiningAreaBehavior(this, 3000));
+        addBehaviour(new PeekReadyDishesBehavior(this, 2000));
     }
 
     /**
@@ -246,7 +246,7 @@ public class Waiter extends Agent {
 
         for (int i = 0; i < 3; i++) {
             if (Math.random() < 0.3) {
-                gameWindow.wait(1000);
+                gameWindow.wait(500);
                 ordersTaken++;
                 IO.println("[Waiter]: I got an order.");
             }
@@ -262,7 +262,7 @@ public class Waiter extends Agent {
 
         while (attemptsMade < maxAttempts && restaurant.takenPlates > 0) {
             if (Math.random() < 0.3) {
-                gameWindow.wait(1000);
+                gameWindow.wait(500);
                 IO.println("[Waiter]: I took an empty plate.");
                 emptyPlatesTaken++;
                 restaurant.takenPlates--; // Decrement taken plates immediately
@@ -279,7 +279,7 @@ public class Waiter extends Agent {
         }
 
         for (String meal : mealsToDeliver) {
-            gameWindow.wait(1000);
+            gameWindow.wait(500);
             IO.println("[Waiter]: Delivering the dish " + meal + " to a table.");
             logToUI("Delivered " + meal + " to table");
             // When a meal is delivered, the customer now has a plate

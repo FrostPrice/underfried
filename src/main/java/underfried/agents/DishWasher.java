@@ -88,7 +88,7 @@ public class DishWasher extends Agent {
             if (content.startsWith("DIRTY_PLATES:")) {
                 goTo(DishWasherState.TAKING_DIRTY_PLATES);
 
-                gameWindow.wait(1000);
+                gameWindow.wait(500);
                 goTo(DishWasherState.WASHING_STATION);
 
                 handleDirtyPlatesNotification(content, sender);
@@ -183,7 +183,7 @@ public class DishWasher extends Agent {
         ACLMessage notification = new ACLMessage(ACLMessage.INFORM);
         goTo(DishWasherState.DELIVERING_CLEAN_PLATES);
 
-        gameWindow.wait(1000);
+        gameWindow.wait(500);
         goTo(DishWasherState.WASHING_STATION);
 
         // Set recipient (Dish Preparer agent)

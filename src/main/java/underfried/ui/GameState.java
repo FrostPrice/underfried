@@ -24,8 +24,8 @@ public class GameState {
     private Random random;
     private long lastFireCheck;
     private long lastRatCheck;
-    private static final long FIRE_CHECK_INTERVAL = 30000; // Check every 30 seconds
-    private static final long RAT_CHECK_INTERVAL = 45000; // Check every 45 seconds
+    private static final long FIRE_CHECK_INTERVAL = 8000; // Check every 30 seconds
+    private static final long RAT_CHECK_INTERVAL = 15000; // Check every 45 seconds
     private static final double FIRE_PROBABILITY = 0.15; // 15% chance
     private static final double RAT_PROBABILITY = 0.20; // 20% chance
 
