@@ -142,7 +142,7 @@ public class Waiter extends Agent {
 
                 // Send ACL message to Chef with all orders
                 if (!ordersMessage.isEmpty()) {
-                    ACLMessage orderMessage = new ACLMessage(ACLMessage.REQUEST);
+                    ACLMessage orderMessage = new ACLMessage(ACLMessage.INFORM);
                     AID chefAID = new AID("chef", AID.ISLOCALNAME);
                     orderMessage.addReceiver(chefAID);
                     orderMessage.setContent(ordersMessage.trim());
