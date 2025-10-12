@@ -188,10 +188,14 @@ public class Chef extends Agent {
                 // Move to counter to receive the order
                 goTo(ChefState.COUNTER);
 
-                IO.println("Chef", "Received order: " + msg.getContent());
-
                 // Parse the order content
                 String orderContent = msg.getContent();
+                if (orderContent.startsWith("RAT_ELIMINATED")) {
+                    block();
+                }
+
+                IO.println("Chef", "Received order: " + orderContent);
+
                 if (orderContent != null && !orderContent.trim().isEmpty()) {
                     // Validate against shared state
                     int expectedOrders = restaurant.getPendingOrderCount();
