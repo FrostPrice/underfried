@@ -18,7 +18,37 @@ This was based on the game [Overcooked](https://ghosttowngames.com/game/overcook
 4. Open the `App.java` file located in `src/main/java/underfried/App.java`.
 5. Run the `main` method in the `App` class to start the JADE platform with the agents.
 
+### Running the Project (Maven)
+
+**Recommended method** - Uses Maven for dependency management and building.
+
+1. Ensure you have Java 21+ and Maven installed on your machine.
+2. Clone this repository to your local machine.
+3. Open a terminal and navigate to the project directory.
+4. Compile the project:
+
+   ```bash
+   mvn compile
+   ```
+
+5. Run the application directly with Maven:
+
+   ```bash
+   mvn exec:java
+   ```
+
+   Or build and run the fat JAR:
+
+   ```bash
+   mvn clean package
+   java -jar target/underfried-1.0-jar-with-dependencies.jar
+   ```
+
+> **Note:** Maven will automatically download JADE and all dependencies on first run.
+
 ### Running the Project (Command Line)
+
+**Alternative method** - Direct compilation without Maven.
 
 1. Ensure you have Java installed on your machine.
 2. Clone this repository to your local machine.
@@ -26,7 +56,7 @@ This was based on the game [Overcooked](https://ghosttowngames.com/game/overcook
 4. Compile the Java files using the following command:
 
    ```bash
-   javac -cp ./lib/jade.jar -d bin src/main/java/underfried/*.java
+   javac -cp ./lib/jade.jar -d bin src/main/java/underfried/**/*.java
    ```
 
 5. Run the JADE platform with the agents using the following command:
