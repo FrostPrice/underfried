@@ -15,7 +15,7 @@ public class App {
      * Main method to launch JADE platform with it's agents and UI
      */
     public static void main(String[] args) {
-        Restaurant restaurant = new Restaurant("Underfried Restaurant");
+        Restaurant restaurant = new Restaurant();
 
         // Initialize the game UI on the Swing Event Dispatch Thread
         gameWindow = new GameWindow(restaurant);

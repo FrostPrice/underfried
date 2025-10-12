@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Restaurant {
-    public Restaurant(String name) {
-        this.restaurantName = name;
+    public Restaurant() {
         this.menu = new HashMap<>();
         this.activeConditions = new ArrayList<>();
         initializeMenu();
@@ -41,7 +40,6 @@ public class Restaurant {
     public static class ActiveCondition {
         public EnvironmentalCondition type;
         public double x, y; // Position in tile coordinates
-        public long startTime;
         public String affectedItem; // For burned food, the dish name
         public boolean resolved;
 
@@ -49,7 +47,6 @@ public class Restaurant {
             this.type = type;
             this.x = x;
             this.y = y;
-            this.startTime = System.currentTimeMillis();
             this.resolved = false;
         }
 
@@ -72,7 +69,6 @@ public class Restaurant {
     public Queue<String> pendingOrders = new LinkedList<>();
 
     private Map<String, String[]> menu;
-    private String restaurantName;
 
     /**
      * Initialize the restaurant menu with available dishes and their recipes
@@ -125,17 +121,6 @@ public class Restaurant {
         return menu.size();
     }
 
-    /**
-     * Print the entire menu to console
-     */
-    public void printMenu() {
-        System.out.println("=== " + restaurantName + " Menu ===");
-        for (Map.Entry<String, String[]> entry : menu.entrySet()) {
-            System.out.println(entry.getKey() + ": " + String.join(", ", entry.getValue()));
-        }
-        System.out.println("Total dishes: " + menu.size());
-    }
-
     // ==================== Order Management Methods ====================
 
     /**
@@ -163,58 +148,12 @@ public class Restaurant {
     }
 
     /**
-     * Peek at the next order without removing it (used for checking)
-     * 
-     * @return the next dish name to prepare, or null if no orders pending
-     */
-    public String peekNextOrder() {
-        return pendingOrders.peek();
-    }
-
-    /**
-     * Check if there are any pending orders
-     * 
-     * @return true if there are orders waiting to be processed
-     */
-    public boolean hasPendingOrders() {
-        return !pendingOrders.isEmpty();
-    }
-
-    /**
      * Get the number of pending orders
      * 
      * @return count of orders in the queue
      */
     public int getPendingOrderCount() {
         return pendingOrders.size();
-    }
-
-    /**
-     * Clear all pending orders (emergency use)
-     */
-    public void clearPendingOrders() {
-        pendingOrders.clear();
-    }
-
-    // ==================== Dish Management Methods ====================
-
-    /**
-     * Get the next ready dish (used by Waiter to serve)
-     * Removes and returns the dish from the ready queue
-     * 
-     * @return the next dish ready to be served, or null if no dishes ready
-     */
-    public String getNextReadyDish() {
-        return readyDishes.poll();
-    }
-
-    /**
-     * Check if there are any dishes ready to serve
-     * 
-     * @return true if there are dishes ready
-     */
-    public boolean hasReadyDishes() {
-        return !readyDishes.isEmpty();
     }
 
     /**
@@ -286,20 +225,6 @@ public class Restaurant {
             }
         }
         return result;
-    }
-
-    /**
-     * Check if there are any unresolved conditions
-     * 
-     * @return true if there are active unresolved conditions
-     */
-    public boolean hasActiveConditions() {
-        for (ActiveCondition condition : activeConditions) {
-            if (!condition.resolved) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
