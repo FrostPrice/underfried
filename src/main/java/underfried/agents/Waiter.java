@@ -5,11 +5,11 @@ import java.util.List;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
+import underfried.IO;
 import underfried.Restaurant;
 import underfried.ui.GameWindow;
-import underfried.behaviors.ConditionalTickerBehavior;
-import underfried.IO;
 
 enum WaiterState {
     KITCHEN,
@@ -20,8 +20,6 @@ public class Waiter extends Agent {
     private Restaurant restaurant = null;
     private GameWindow gameWindow = null;
     private WaiterState currentState = WaiterState.KITCHEN;
-
-    private boolean isBusy = false;
 
     private int ordersTaken = 0;
     private int emptyPlatesTaken = 0;
@@ -96,19 +94,13 @@ public class Waiter extends Agent {
         }
     }
 
-    private class PeekDiningAreaBehavior extends ConditionalTickerBehavior {
+    private class PeekDiningAreaBehavior extends TickerBehaviour {
         public PeekDiningAreaBehavior(Agent a, long timeout) {
             super(a, timeout);
         }
 
-        protected boolean testCondition() {
-            return !isBusy;
-        }
-
-        protected void execute() {
+        protected void onTick() {
             IO.println("[Waiter]: I'll take a look at the tables.");
-
-            isBusy = true;
 
             // Check for rats first
             checkForRats();
@@ -172,21 +164,15 @@ public class Waiter extends Agent {
                         "[Waiter]: Notified dishwasher about " + emptyPlatesTaken + " dirty plates.");
                 emptyPlatesTaken = 0;
             }
-
-            isBusy = false;
         }
     }
 
-    private class PeekReadyDishesBehavior extends ConditionalTickerBehavior {
+    private class PeekReadyDishesBehavior extends TickerBehaviour {
         public PeekReadyDishesBehavior(Agent a, long timeout) {
             super(a, timeout);
         }
 
-        protected boolean testCondition() {
-            return !isBusy;
-        }
-
-        protected void execute() {
+        protected void onTick() {
             goTo(WaiterState.KITCHEN);
 
             // Validate shared state before picking up dishes
