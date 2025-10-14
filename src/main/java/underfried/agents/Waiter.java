@@ -77,13 +77,14 @@ public class Waiter extends Agent {
                     }
 
                     // Alert other agents about successful rat elimination
-                    ACLMessage alert = new ACLMessage(ACLMessage.INFORM);
-                    alert.addReceiver(new AID("chef", AID.ISLOCALNAME));
-                    alert.addReceiver(new AID("dishWasher", AID.ISLOCALNAME));
-                    alert.setContent("RAT_ELIMINATED:" + rat.x + "," + rat.y);
-                    send(alert);
+                    // ACLMessage alert = new ACLMessage(ACLMessage.INFORM);
+                    // alert.addReceiver(new AID("chef", AID.ISLOCALNAME));
+                    // alert.addReceiver(new AID("dishWasher", AID.ISLOCALNAME));
+                    // alert.setContent("RAT_ELIMINATED:" + rat.x + "," + rat.y);
+                    // send(alert);
 
-                    IO.println(getAID().getName(), "Alerted other agents - rat has been eliminated!");
+                    // IO.println(getAID().getName(), "Alerted other agents - rat has been
+                    // eliminated!");
 
                     // Mark as resolved (rat was bonked and eliminated)
                     restaurant.resolveCondition(rat);
